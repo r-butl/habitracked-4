@@ -4,4 +4,4 @@
 - Anthony Pecoraro ajpecoraro24@gmail.com
 - Ji (Jenny) Bae jbae4@csuchico.edu 
 - Aditya Mohandas adityam181200@gmail.com
-
+- Lucas Butler 08lbutler31@gmail.com
