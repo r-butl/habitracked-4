@@ -1,3 +1,14 @@
+Tess Shelton:
+
+1. My family has 7 cats.
+2. I have been to Australia twice.
+3. My first internship was at LANL. (Lie)
+
+Lucas - My favorite color is blue. 
+Jenny - I have eaten chicken feet in Korea.
+Anthony - I've gone skydiving.
+Aditya - I can solve a 3x3 rubiks cube in under 40 seconds. 
+
 Aditya Mohandas
 1. I broke into someone’s house accidentally.
 2. I can solve a 3x3 Rubiks cube in under 40 seconds. (Lie)
@@ -43,4 +54,3 @@ Tess = I've been to Australia twice.
 Jenn = I've eaten chicken feet.
 Anthony = I've gone sky diving.
 Aditya = I can solve a rubic's cube in under 40 seconds.
-
