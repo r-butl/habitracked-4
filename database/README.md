@@ -1,3 +1,8 @@
+These instructions were followed to set up the database:
+```
+https://www.mongodb.com/resources/languages/mern-stack-tutorial
+```
+
 Install the packages for the database backend:
 ```
 npm install package.json
