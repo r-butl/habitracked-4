@@ -26,6 +26,8 @@ ALTAS_URI=<your-connection-string>
 PORT=5050
 ```
 
+Replace <db_password> with a password of your choosing.
+
 Run the database:
 ```
 node --env-file=config.env server
