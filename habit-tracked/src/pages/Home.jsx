@@ -8,11 +8,12 @@ export default function Home() {
         Your personal habit tracker to stay motivated and reach your goals.
       </p>
       
-      <div className="mt-4">
+      <div className="mt-4 d-flex justify-content-center">
         <img 
-          src="https://source.unsplash.com/800x400/?habit,productivity" 
+          src="https://images.healthshots.com/healthshots/en/uploads/2022/10/03161920/habits.jpg" 
           alt="Habits" 
           className="img-fluid rounded shadow-lg"
+          style={{ width: "50%", maxWidth: "500px" }} // Adjust size here
         />
       </div>
 
