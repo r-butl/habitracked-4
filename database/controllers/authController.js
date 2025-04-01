@@ -1,10 +1,12 @@
 import User from '../models/user.js'
 import { hashPassword, comparePassword } from '../helpers/auth.js';
+import jwt from 'jsonwebtoken'
 
 export const test = (req, res) => {
   res.json("test is working");
 };
 
+// Register endpoint
 export const registerUser = async (req, res) => {
   try {
     const {name, email, password} = req.body;
@@ -41,3 +43,34 @@ export const registerUser = async (req, res) => {
     console.log(error)
   }
 };
+
+// Login endpoint 
+export const loginUser = async (req, res) => {
+  try {
+    const {email, password} = req.body;
+
+    // check if user exists
+    const user = await User.findOne({email});
+    if(!user){
+      return res.json({
+        error: 'no user found'
+      })
+    }
+
+    // check if passwords match
+    const match = await comparePassword(password, user.password)
+    if(match) {
+      // res.json('passwords match')
+      jwt.sign({email: user.email, id: user._id, name: user.name}, process.env.JWT_SECRET, {}, (err, token) => {
+        if(err) throw err;
+        res.cookie('token', token).json(user)
+      })
+    } else {
+      return res.json({
+        error: 'passwords do not match'
+      })
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}

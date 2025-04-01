@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser'
 
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
@@ -18,6 +19,9 @@ const PORT = process.env.PORT || 5050;
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({extended: false}))
+
 app.use('/', authRoutes)
 
 // start the Express server

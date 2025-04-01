@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import cors from "cors";
-import { test, registerUser } from "../controllers/authController.js";
+import { test, registerUser, loginUser } from "../controllers/authController.js";
 
 router.use(
   cors({
@@ -12,5 +12,6 @@ router.use(
 
 router.get("/", test);
 router.post("/register", registerUser)
+router.post("/login", loginUser)
 
 export default router;
