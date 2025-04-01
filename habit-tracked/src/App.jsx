@@ -1,6 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast'
 
 // component imports
 import Navbar from './components/Navbar';
@@ -27,6 +28,7 @@ function App() {
     <>
     <Router>
     <Navbar/>
+    <Toaster position='bottom-right' toastOptions={{duration: 2000}} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
