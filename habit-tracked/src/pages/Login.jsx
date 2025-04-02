@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext";
 
 export default function Login() {
-  const { user, setUser, fetchUser } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const [data, setData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -14,19 +14,14 @@ export default function Login() {
   const loginUser = async (e) => {
     e.preventDefault();
     const { email, password } = data;
-    
-    try {
-      const { data } = await axios.post('/login', { email, password });
+        
+    const {data: res} = await axios.post('/login', { email, password });
 
-      if (data.error) {
-        toast.error(data.error);
-      } else {
-        setUser(data); // Update user state
-        await fetchUser(); // Fetch latest user data
-        setData({ email: "", password: "" }); // Clear form
-      }
-    } catch (error) {
-      console.error("Login failed.", error);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      setUser(res); // Update user state
+      setData({ email: "", password: "" }); // Clear form
     }
   };
 

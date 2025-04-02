@@ -1,8 +1,14 @@
 import React, { useContext } from 'react';
 import { UserContext } from '../context/userContext';
+//import { useLocation } from 'react-router-dom';
 
 export default function Dashboard() {
   const { user } = useContext(UserContext);
+
+  // variable passing test
+  // const location = useLocation()
+  // const { userData, timestamp } = location.state || {};
+  // console.log(userData)
 
   return (
     <div className="container d-flex justify-content-center align-items-center min-vh-100">
