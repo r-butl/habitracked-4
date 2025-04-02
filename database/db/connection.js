@@ -1,5 +1,6 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const dotenv = require("dotenv");
+
 dotenv.config({ path: "./config.env" });
 
 const uri = process.env.ATLAS_URI || "";
@@ -13,7 +14,7 @@ const client = new MongoClient(uri, {
   },
 });
 
-async function connectToMongoDB() {
+async function connectToDB(){
   try {
     // Connect the client to the server
     await client.connect();
@@ -27,8 +28,6 @@ async function connectToMongoDB() {
   }
 }
 
-connectToMongoDB();
-
 const db = client.db("employees");
 
-module.exports = db;
+module.exports = { db, connectToDB, client }
