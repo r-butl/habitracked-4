@@ -1,3 +1,4 @@
+// !NOT IN USE! Use authRoutes.js
 import express from "express";
 
 // This will help us connect to the database

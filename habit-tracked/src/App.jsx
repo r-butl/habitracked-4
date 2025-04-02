@@ -1,7 +1,8 @@
-import logo from './logo.svg';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast'
+import { UserContextProvider, UserContext } from './context/userContext';
+import { useContext } from 'react';
 
 // component imports
 import Navbar from './components/Navbar';
@@ -10,6 +11,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home'
 import Register from './pages/Register'
 import Login from './pages/Login'
+import Dashboard from './pages/Dashboard';
 
 // bootstrap imports
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -25,18 +27,24 @@ axios.defaults.withCredentials = true;
 
 function App() {
   return (
-    <>
-    <Router>
-    <Navbar/>
-    <Toaster position='bottom-right' toastOptions={{duration: 2000}} />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </Router>
-    </>
+    <UserContextProvider> {/* ✅ Context is available from this point onward */}
+      <Router>
+        <NavbarWrapper />
+        <Toaster position="bottom-right" toastOptions={{ duration: 2500 }} />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </Router>
+    </UserContextProvider>
   );
+}
+
+function NavbarWrapper() {
+  const { user, setUser } = useContext(UserContext); // ✅ Now safely inside the provider
+  return <Navbar user={user} setUser={setUser} />;
 }
 
 export default App;

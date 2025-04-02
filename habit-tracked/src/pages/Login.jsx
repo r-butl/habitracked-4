@@ -1,35 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/userContext";
 
 export default function Login() {
+  const { user, setUser, fetchUser } = useContext(UserContext);
   const navigate = useNavigate();
-  const [data, setData] = useState({
-    email: "",
-    password: "",
-  });
+  const [data, setData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
   const loginUser = async (e) => {
     e.preventDefault();
-    const {email, password} = data
+    const { email, password } = data;
+    
     try {
-      const {data} = await axios.post('/login', {
-        email,
-        password,
-      })
-      if(data.error){
-        toast.error(data.error)
+      const { data } = await axios.post('/login', { email, password });
+
+      if (data.error) {
+        toast.error(data.error);
       } else {
-        setData({});
-        navigate('/')
+        setUser(data); // Update user state
+        await fetchUser(); // Fetch latest user data
+        setData({ email: "", password: "" }); // Clear form
       }
     } catch (error) {
-      
+      console.error("Login failed.", error);
     }
   };
+
+  // UseEffect to navigate when user state is updated
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

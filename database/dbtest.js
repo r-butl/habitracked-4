@@ -2,7 +2,7 @@
 // To run CRUD test enter:
 // $ node --env-file=config.env dbtest.js
 ///////////////////////////////////////////
-import db from "./db/connection.js"; // Import your database connection
+const db = require("./db/connection"); // Import your database connection
 
 async function insertTestData() {
   const usersCollection = db.collection("users"); // Creating a collection

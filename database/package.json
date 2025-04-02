@@ -1,6 +1,6 @@
 {
   "name": "database",
-  "type": "module",
+  "type": "commonjs",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
