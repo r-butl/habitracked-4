@@ -1,14 +1,14 @@
 // equivalent to index.js 
-import express from "express";
-import cors from "cors";
-import mongoose from 'mongoose';
-import cookieParser from 'cookie-parser'
+const express = require("express");
+const cors = require("cors");
+const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 
 // routes
-import authRoutes from './routes/authRoutes.js'
+const authRoutes = require('./routes/authRoutes.js');
 
 // database connection
 mongoose.connect(process.env.ATLAS_URI)

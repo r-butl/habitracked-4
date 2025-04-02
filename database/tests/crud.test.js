@@ -2,55 +2,55 @@
 // To run CRUD test enter:
 // $ node --env-file=config.env dbtest.js
 ///////////////////////////////////////////
-import db from "./db/connection.js"; // Import your database connection
+const { db, connectToDB, client }  = require("../db/connection.js");
 
-async function insertTestData() {
-  const usersCollection = db.collection("users"); // Creating a collection
+beforeAll(async () => {
+  await connectToDB();
+});
 
-  const newUser = {
-    name: "John Doe",
-    email: "johndoe@example.com",
-    password: "hashed_password_here", // Ideally, hash passwords before storing
-  };
+afterAll(async () => {
+  await client.close();
+});
 
-  const result = await usersCollection.insertOne(newUser);
-  console.log("Inserted User ID:", result.insertedId);
-}
+describe("MongoDB CRUD Operations", () => {
+  let usersCollection;
+  const testUser = {
+      name: "John Doe",
+      email: "johndoe@example.com",
+      password: "hashed_password_here", // Ideally, hash passwords before storing
+    };
 
-async function findUser() {
-  const usersCollection = db.collection("users");
-  const user = await usersCollection.findOne({ email: "johndoe@example.com" });
+  beforeAll(() => {
+    usersCollection = db.collection("users");
+  });
 
-  if (user) {
-    console.log("User Found:", user);
-  } else {
-    console.log("User Not Found.");
-  }
-}
+  test("Insert a user into the database", async () => {
+    const result = await usersCollection.insertOne(testUser);
+    expect(result.insertedId).toBeDefined();
+  });
 
-async function updateUser() {
-  const usersCollection = db.collection("users");
+  test("Find the inserted user", async () => {
+    const user = await usersCollection.findOne({ email: "johndoe@example.com" });
+    expect(user).not.toBeNull();
+    expect(user).toBe(testUser.name);
+  });
 
-  const result = await usersCollection.updateOne(
-    { email: "johndoe@example.com" },
-    { $set: { name: "Johnathan Doe" } }
-  );
+  test("Update the users name", async () => {
+    const result = await usersCollection.updateOne(
+      { email: "johndoe@example.com" },
+      { $set: { name: "Johnathan Doe" } }
+    );
 
-  console.log("Matched:", result.matchedCount, "Modified:", result.modifiedCount);
-}
+    expect(result.matchedCount).toBe(1);
+    expect(result.modifiedCount).toBe(1);
+  });
 
-async function deleteUser() {
-  const usersCollection = db.collection("users");
-  const result = await usersCollection.deleteOne({ email: "johndoe@example.com" });
+  test("Delete the user", async () => {
+    const result = await usersCollection.deleteOne({ email: "johndoe@example.com" });
+    expect(result.deletedCount).toBe(1);
 
-  console.log("Deleted Count:", result.deletedCount);
-}
+    const deletedUser = await usersCollection.findOne({ email: testUser.email });
+    expect(deletedUser).toBeNull();
+  });
 
-// CRUD tests (run individually)
-insertTestData();
-
-// findUser();
-
-// updateUser();
-
-// deleteUser();
+});
