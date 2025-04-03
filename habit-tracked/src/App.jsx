@@ -27,7 +27,7 @@ axios.defaults.withCredentials = true;
 
 function App() {
   return (
-    <UserContextProvider> {/* ✅ Context is available from this point onward */}
+    <UserContextProvider>
       <Router>
         <NavbarWrapper />
         <Toaster position="bottom-right" toastOptions={{ duration: 2500 }} />
@@ -43,7 +43,7 @@ function App() {
 }
 
 function NavbarWrapper() {
-  const { user, setUser } = useContext(UserContext); // ✅ Now safely inside the provider
+  const { user, setUser } = useContext(UserContext);
   return <Navbar user={user} setUser={setUser} />;
 }
 

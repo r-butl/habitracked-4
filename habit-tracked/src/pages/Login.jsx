@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import axios from 'axios';
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/userContext";
 
 export default function Login() {
@@ -77,7 +77,7 @@ export default function Login() {
           </button>
         </form>
         <p className="text-center mt-3">
-          Don't have an account? <a href="/register" className="text-primary">Register</a>
+          Don't have an account? <Link to="/register" className="text-primary">Register</Link>
         </p>
       </div>
     </div>
