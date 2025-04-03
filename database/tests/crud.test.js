@@ -17,7 +17,7 @@ describe("MongoDB CRUD Operations", () => {
   const testUser = {
       name: "John Doe",
       email: "johndoe@example.com",
-      password: "hashed_password_here", // Ideally, hash passwords before storing
+      password: "test_password", // Ideally, hash passwords before storing
     };
 
   beforeAll(() => {
@@ -32,7 +32,8 @@ describe("MongoDB CRUD Operations", () => {
   test("Find the inserted user", async () => {
     const user = await usersCollection.findOne({ email: "johndoe@example.com" });
     expect(user).not.toBeNull();
-    expect(user).toBe(testUser.name);
+    expect(user.name).toBe(testUser.name);
+    expect(user.password).toBe(testUser.password);
   });
 
   test("Update the users name", async () => {
