@@ -50,15 +50,16 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.json({
-        error: 'no user found'
-      });
+      return res.status(401).json({ error: 'Passwords do not match' });
     }
 
     const match = await comparePassword(password, user.password);
+     
     if (match) {
       jwt.sign(
-        { email: user.email, id: user._id, name: user.name },
+        { email: user.email, 
+          id: user._id, name: 
+          user.name },
         process.env.JWT_SECRET,
         {},
         (err, token) => {
@@ -67,12 +68,11 @@ const loginUser = async (req, res) => {
         }
       );
     } else {
-      return res.json({
-        error: 'passwords do not match'
-      });
+      return res.status(401).json({ error: 'Passwords do not match' });
     }
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
