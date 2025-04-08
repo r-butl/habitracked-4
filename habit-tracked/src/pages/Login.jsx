@@ -12,16 +12,33 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const loginUser = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission behavior
     const { email, password } = data;
-        
-    const {data: res} = await axios.post('/login', { email, password });
-
-    if (res.error) {
-      toast.error(res.error);
-    } else {
-      setUser(res); // Update user state
-      setData({ email: "", password: "" }); // Clear form
+  
+    try {
+      // Attempt to send login credentials to the backend
+      const { data: res } = await axios.post('/login', { email, password });
+  
+      // Backend responded with a 200 OK, but may include an error field in the response body
+      if (res.error) {
+        // Show a toast notification if the backend returns an error message
+        toast.error(res.error);
+      } else {
+        // If login is successful, update user context and clear the form fields
+        setUser(res);
+        setData({ email: "", password: "" });
+      }
+    } catch (err) {
+      // Handle HTTP errors (e.g., 401 Unauthorized, 500 Internal Server Error)
+      if (err.response && err.response.status === 401) {
+        // Specific handling for 401 errors: log to console and show a toast
+        console.warn("401 Unauthorized:", err.response.data?.error);
+        toast.error(err.response.data?.error || "Unauthorized");
+      } else {
+        // Handle other unexpected errors (network errors, server crashes, etc.)
+        console.error("Login error:", err);
+        toast.error("An error occurred during login.");
+      }
     }
   };
 

@@ -50,7 +50,10 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: 'Passwords do not match' });
+      // If no user is found, return a 401 Unauthorized response
+      return res.status(401).json({
+        error: 'User not found'
+      });
     }
 
     const match = await comparePassword(password, user.password);
