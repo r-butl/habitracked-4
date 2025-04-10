@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +18,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.1",
-    "package.json": "^2.0.1"
+    "package.json": "^2.0.1",
+    "supertest": "^7.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
