@@ -4,6 +4,7 @@ import axios from 'axios';
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/userContext";
+import { login } from "../utils/api"; 
 
 export default function Login() {
   const { user, setUser } = useContext(UserContext);
@@ -14,11 +15,9 @@ export default function Login() {
   const loginUser = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
     const { email, password } = data;
-  
     try {
       // Attempt to send login credentials to the backend
-      const { data: res } = await axios.post('/login', { email, password });
-  
+      const res = await login(data);
       // Backend responded with a 200 OK, but may include an error field in the response body
       if (res.error) {
         // Show a toast notification if the backend returns an error message
