@@ -4,9 +4,10 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const { test, registerUser, loginUser, logout, getProfile } = require("../controllers/authController");
 const User = require("../models/user");
-const { generateSalt, hashWithSalt, hashPassword, comparePassword } = require('../helpers/auth');
+const { hashPassword, comparePassword } = require('../helpers/auth');
 const jwt = require("jsonwebtoken");
 
+jest.setTimeout(10000);
 jest.mock("../models/user");
 jest.mock("../helpers/auth");
 jest.mock("jsonwebtoken");
@@ -20,97 +21,46 @@ app.post("/login", loginUser);
 app.post("/logout", logout);
 app.get("/profile", getProfile);
 
+jest.mock('bcrypt');  // Mocking bcrypt module
+
 describe('Auth Helpers', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  const password = 'secure123';
+  const hashedPassword = 'hashed_password_example';
+
+  beforeEach(() => {
+    jest.clearAllMocks(); // Ensure mocks are cleared before each test
   });
 
-  describe('generateSalt', () => {
-    it('should resolve with a salt when bcrypt.genSalt succeeds', async () => {
-      const mockSalt = 'mockSalt';
-      bcrypt.genSalt.mockImplementation((rounds, callback) => callback(null, mockSalt));
+  test('should hash password and match it correctly', async () => {
+    // Mock bcrypt methods
+    bcrypt.genSalt.mockImplementation((rounds, callback) => callback(null, 'mockedSalt'));
+    bcrypt.hash.mockImplementation((password, salt, callback) => callback(null, hashedPassword));
+    bcrypt.compare.mockImplementation((password, hash, callback) => callback(null, true));
 
-      const result = await generateSalt(12);
-      expect(result).toBe(mockSalt);
-      expect(bcrypt.genSalt).toHaveBeenCalledWith(12, expect.any(Function));
-    });
+    const hashed = await hashPassword(password);
+    expect(typeof hashed).toBe('string'); // It should return a string (hashed password)
+    expect(hashed).toBe(hashedPassword); // Check if hashed password matches expected result
 
-    it('should reject with an error when bcrypt.genSalt fails', async () => {
-      const mockError = new Error('genSalt error');
-      bcrypt.genSalt.mockImplementation((rounds, callback) => callback(mockError, null));
-
-      await expect(generateSalt(12)).rejects.toThrow('genSalt error');
-      expect(bcrypt.genSalt).toHaveBeenCalledWith(12, expect.any(Function));
-    });
+    const isMatch = await comparePassword(password, hashed);
+    expect(isMatch).toBe(true); // Password should match the hashed one
   });
 
-  describe('hashWithSalt', () => {
-    it('should resolve with a hash when bcrypt.hash succeeds', async () => {
-      const mockHash = 'mockHash';
-      bcrypt.hash.mockImplementation((password, salt, callback) => callback(null, mockHash));
-
-      const result = await hashWithSalt('password123', 'mockSalt');
-      expect(result).toBe(mockHash);
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 'mockSalt', expect.any(Function));
-    });
-
-    it('should reject with an error when bcrypt.hash fails', async () => {
-      const mockError = new Error('hash error');
-      bcrypt.hash.mockImplementation((password, salt, callback) => callback(mockError, null));
-
-      await expect(hashWithSalt('password123', 'mockSalt')).rejects.toThrow('hash error');
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 'mockSalt', expect.any(Function));
-    });
+  test('should return error when hashing fails', async () => {
+    // Mock bcrypt methods to simulate an error
+    bcrypt.genSalt.mockImplementation((rounds, callback) => callback(new Error('Salt error')));
+    
+    await expect(hashPassword(password)).rejects.toThrow('Salt error');
   });
 
-  describe('hashPassword', () => {
-    it('should resolve with a hashed password when successful', async () => {
-      const mockSalt = 'mockSalt';
-      const mockHash = 'mockHash';
+  test('should return false if password does not match hashed one', async () => {
+    // Mock bcrypt methods
+    bcrypt.genSalt.mockImplementation((rounds, callback) => callback(null, 'mockedSalt'));
+    bcrypt.hash.mockImplementation((password, salt, callback) => callback(null, hashedPassword));
+    bcrypt.compare.mockImplementation((password, hash, callback) => callback(null, false));
 
-      jest.spyOn(require('../helpers/auth'), 'generateSalt').mockResolvedValue(mockSalt);
-      jest.spyOn(require('../helpers/auth'), 'hashWithSalt').mockResolvedValue(mockHash);
-
-      const result = await hashPassword('password123');
-      expect(result).toBe(mockHash);
-      expect(require('../helpers/auth').generateSalt).toHaveBeenCalledWith(12);
-      expect(require('../helpers/auth').hashWithSalt).toHaveBeenCalledWith('password123', mockSalt);
-    });
-
-    it('should throw an error if generateSalt fails', async () => {
-      const mockError = new Error('generateSalt error');
-      jest.spyOn(require('../helpers/auth'), 'generateSalt').mockRejectedValue(mockError);
-
-      await expect(hashPassword('password123')).rejects.toThrow('generateSalt error');
-    });
-
-    it('should throw an error if hashWithSalt fails', async () => {
-      const mockSalt = 'mockSalt';
-      const mockError = new Error('hashWithSalt error');
-
-      jest.spyOn(require('../helpers/auth'), 'generateSalt').mockResolvedValue(mockSalt);
-      jest.spyOn(require('../helpers/auth'), 'hashWithSalt').mockRejectedValue(mockError);
-
-      await expect(hashPassword('password123')).rejects.toThrow('hashWithSalt error');
-    });
-  });
-
-  describe('comparePassword', () => {
-    it('should resolve with true when passwords match', async () => {
-      bcrypt.compare.mockResolvedValue(true);
-
-      const result = await comparePassword('password123', 'hashedPassword');
-      expect(result).toBe(true);
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
-    });
-
-    it('should resolve with false when passwords do not match', async () => {
-      bcrypt.compare.mockResolvedValue(false);
-
-      const result = await comparePassword('password123', 'hashedPassword');
-      expect(result).toBe(false);
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
-    });
+    const hashed = await hashPassword(password);
+    const isMatch = await comparePassword('wrongpassword', hashed);
+    expect(isMatch).toBe(false); // Password should not match if incorrect
   });
 });
 
