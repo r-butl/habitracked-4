@@ -6,10 +6,16 @@ import { DayPilotCalendar } from "@daypilot/daypilot-lite-react";
 
 export default function Calendar() {
  const { user } = useContext(UserContext);
- // variable passing test
- // const location = useLocation()
- // const { userData, timestamp } = location.state || {};
- // console.log(userData)
+
+ // protect against accessing null user during logout [temp fix]
+ if (!user) {
+    return (
+      <div className="text-center mt-5">
+        <p className="text-danger">User not logged in. Redirecting...</p>
+      </div>
+    );
+  }
+
  return (
    <div className="bg-light min-vh-100">
        <div className="container bg-light mt-0">

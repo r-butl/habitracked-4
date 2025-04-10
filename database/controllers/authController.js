@@ -94,7 +94,7 @@ const getProfile = (req, res) => {
 
 // Export all functions
 module.exports = {
-  test,
+  //test,
   registerUser,
   loginUser,
   logout,
