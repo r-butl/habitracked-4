@@ -11,7 +11,7 @@ A team project for 630: Scalable Software Systems.
 
 ## Documentation
 
-- [Project Proposal](#)  
+- [Project Proposal](https://docs.google.com/document/d/1lBOjeClk2n-NbxAdoOie85mMBmyX33JwRwvnDNWXfeQ/edit?usp=sharing)  
 - [Internal Design](https://docs.google.com/document/d/1d-m6LmA8ItdyWU8fd1HVlgtXUUMk4F2oFoAr51jJZWw/edit?usp=sharing)  
-- [External Design](#)  
-- [Product Backlog](#)
+- [External Design](https://docs.google.com/document/d/1lBOjeClk2n-NbxAdoOie85mMBmyX33JwRwvnDNWXfeQ/edit?usp=sharing)  
+- [Product Backlog](https://docs.google.com/document/d/1hYwRbCUbknPTs7iRSPkF0FvoMBZQwv5wX6aHyLND40E/edit?usp=sharing)
