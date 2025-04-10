@@ -1,13 +1,28 @@
-import express from "express";
-import cors from "cors";
-import records from "./routes/record.js";
+// equivalent to index.js 
+const express = require("express");
+const cors = require("cors");
+const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+
+const dotenv = require("dotenv");
+dotenv.config({ path: "./config.env" });
+
+// routes
+const authRoutes = require('./routes/authRoutes.js');
+
+// database connection
+mongoose.connect(process.env.ATLAS_URI)
+  .then(() => console.log("Database Connected"))
+  .catch((err) => console.log("Database not connected.", err));
 
 const PORT = process.env.PORT || 5050;
 const app = express();
 
-app.use(cors());
 app.use(express.json());
-app.use("/record", records);
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: false }));
+
+app.use('/', authRoutes);
 
 // start the Express server
 app.listen(PORT, () => {

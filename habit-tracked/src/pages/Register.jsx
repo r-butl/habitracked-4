@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import axios from 'axios'
+import toast from "react-hot-toast";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
+  const navigate = useNavigate()
   const [data, setData] = useState({
     name: "",
     email: "",
@@ -9,8 +13,23 @@ export default function Register() {
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  const registerUser = (e) => {
+  const registerUser = async (e) => {
     e.preventDefault();
+    const {name, email, password} = data
+    try {
+      const {data} = await axios.post('/register', {
+        name, email, password
+      })
+      if(data.error){
+        toast.error(data.error)
+      } else {
+        setData({})
+        toast.success("Login Successful. Welcome!")
+        navigate('/login')
+      }
+    } catch(error) {
+      console.log(error)
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -69,7 +88,7 @@ export default function Register() {
           </button>
         </form>
         <p className="text-center mt-3">
-          Already have an account? <a href="/login" className="text-primary">Login</a>
+          Already have an account? <Link to="/login" className="text-primary">Login</Link>
         </p>
       </div>
     </div>

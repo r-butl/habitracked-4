@@ -1,16 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import axios from 'axios';
+import toast from "react-hot-toast";
+import { useNavigate, Link } from "react-router-dom";
+import { UserContext } from "../context/userContext";
 
 export default function Login() {
-  const [data, setData] = useState({
-    email: "",
-    password: "",
-  });
+  const { user, setUser } = useContext(UserContext);
+  const navigate = useNavigate();
+  const [data, setData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
-  const loginUser = (e) => {
+  const loginUser = async (e) => {
     e.preventDefault();
+    const { email, password } = data;
+        
+    const {data: res} = await axios.post('/login', { email, password });
+
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      setUser(res); // Update user state
+      setData({ email: "", password: "" }); // Clear form
+    }
   };
+
+  // UseEffect to navigate when user state is updated
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -57,7 +77,7 @@ export default function Login() {
           </button>
         </form>
         <p className="text-center mt-3">
-          Don't have an account? <a href="/register" className="text-primary">Register</a>
+          Don't have an account? <Link to="/register" className="text-primary">Register</Link>
         </p>
       </div>
     </div>

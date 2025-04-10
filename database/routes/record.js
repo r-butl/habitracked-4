@@ -1,10 +1,10 @@
-import express from "express";
+const express = require("express");
 
 // This will help us connect to the database
-import db from "../db/connection.js";
+const db = require("../db/connection.js");
 
 // This help convert the id from string to ObjectId for the _id.
-import { ObjectId } from "mongodb";
+const { ObjectId } = require("mongodb");
 
 // router is an instance of the express router.
 // We use it to define our routes.
@@ -81,4 +81,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-export default router;
+module.exports = { router };
