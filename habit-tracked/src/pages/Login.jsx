@@ -27,6 +27,7 @@ export default function Login() {
         // If login is successful, update user context and clear the form fields
         setUser(res);
         setData({ email: "", password: "" });
+        toast.success("Login Successful. Welcome!");
       }
     } catch (err) {
       // Handle HTTP errors (e.g., 401 Unauthorized, 500 Internal Server Error)
