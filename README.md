@@ -1,6 +1,6 @@
 # habitracked-4
 
-A team project for 630: Scalable Software Systems. 
+A team project for 630: Software Design and Maintenance. 
 
 ## Team Members
 - Tess Shelton tashelton@csuchico.edu
