@@ -53,6 +53,7 @@ export default function Navbar({ user, setUser }) {
               </li>
               <li className="nav-item">
                 <Link className="nav-link" to="/calendar">Calendar</Link>
+                {/* <a className="" href="/calendar">Calendar</a> */}
               </li>
               </>
             )}

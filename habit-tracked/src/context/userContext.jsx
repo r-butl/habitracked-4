@@ -1,28 +1,22 @@
-// global state 
 import axios from 'axios';
 import { createContext, useState, useEffect } from 'react';
 
 export const UserContext = createContext({});
 
-// used to get user information across pages (display name for example)
 export function UserContextProvider({children}) {
   const [user, setUser] = useState(null);
-  // fires every time a page renders
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    if (!user) {
-      axios.get('/profile')
-        .then(({ data }) => {
-          setUser(data);
-        })
-        .catch(err => {
-          console.error("Error fetching profile:", err);
-        });
-    }
-  }, [user]);
+    axios.get('/profile')
+      .then(({ data }) => setUser(data))
+      .catch(() => setUser(null))
+      .finally(() => setReady(true));
+  }, []);
 
   return (
-    <UserContext.Provider value={{user, setUser}}>
+    <UserContext.Provider value={{ user, setUser, ready }}>
       {children}
     </UserContext.Provider>
-  )
+  );
 }
