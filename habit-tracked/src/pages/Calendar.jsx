@@ -1,11 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState, useContext, useEffect, useState } from 'react';
 import { UserContext } from '../context/userContext';
 import axios from 'axios';
 import { DayPilotCalendar } from "@daypilot/daypilot-lite-react";
+import { CreateHabitButton } from '../components/CreateHabitButton/CreateHabitButton';
+import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
 
 export default function Calendar() {
   const { user, ready } = useContext(UserContext);
-  const [habits, setHabits] = useState([]);
+ const [showChooseHabit, setShowChooseHabit] = useState(false);
+ const onCreateClick = () => {
+   setShowChooseHabit(true);
+ }  const [habits, setHabits] = useState([]);
 
   useEffect(() => {
     // if (!ready || !user || !user.id) return;
@@ -36,19 +41,33 @@ export default function Calendar() {
     );
   }
 
-  return (
-    <div className="bg-light min-vh-100">
-      <div className="container bg-light mt-0">
-        <h1 className="text-center fs-2">{user.name}'s Calendar</h1>
-        <div>
-          <DayPilotCalendar viewType={'Week'} headerDateFormat="dddd" />
-          <ul>
-            {habits.map((habit, index) => (
-              <li key={index}>{habit.name}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
+ return (
+   <div className="bg-light min-vh-100">
+       <div className="container bg-light mt-0">
+           <h1 className="text-center fs-2">{user.name}'s Calendar </h1>
+           <div>
+           <CreateHabitButton onClick={onCreateClick} />
+            {showChooseHabit && (
+              <ChooseHabitType 
+              show={showChooseHabit} 
+              onClose={() => {setShowChooseHabit(false)}} 
+              onSelectList={() => {
+                setShowChooseHabit(false);
+                alert("You chose curated habits");
+              }} 
+              onCreateCustomHabit={() => {
+                setShowChooseHabit(false);
+                alert("You chose custom habit.");
+              }}></ChooseHabitType>
+            )}
+           </div>
+           <div>
+               <DayPilotCalendar
+               viewType={'Week'}
+               headerDateFormat="dddd"
+               />
+           </div>
+       </div>
+   </div>
+ );
 }
