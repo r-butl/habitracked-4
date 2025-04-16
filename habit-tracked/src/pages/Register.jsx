@@ -3,6 +3,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import axios from 'axios'
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
+import { register } from "../utils/api";
 
 export default function Register() {
   const navigate = useNavigate()
@@ -17,9 +18,7 @@ export default function Register() {
     e.preventDefault();
     const {name, email, password} = data
     try {
-      const {data} = await axios.post('/register', {
-        name, email, password
-      })
+      const data = await register(data);
       if(data.error){
         toast.error(data.error)
       } else {
