@@ -20,15 +20,18 @@ const userSchema = new Schema({
 
 const UserModel = mongoose.model('User', userSchema);
 
-// --- Habit Schema (Generic) ---
 const getUserHabitModel = (userId) => {
   const habitSchema = new Schema({
     name: { 
       type: String, 
       required: true 
     },
-    icon: { String }, // File path or URL
-    description: { String },
+    icon: { 
+      type: String 
+    },
+    description: { 
+      type: String 
+    },
     minTime: {
       type: Number, 
       required: true 
@@ -41,7 +44,29 @@ const getUserHabitModel = (userId) => {
       type: String,
       enum: ['morning', 'midday', 'evening'],
       default: null
+    },
+    // controls whether habit is private or public
+    // 0 = private, 1 = public
+    visibility: { 
+      type: Number, 
+      required: true 
+    },
+
+    // Scheduling Fields
+    start: {
+      type: Date,
+      required: true
+    },
+    end: {
+      type: Date,
+      required: true
+    },
+    recurrence: {
+      type: String,
+      enum: ['none', 'daily', 'weekly'],
+      default: 'none'
     }
+
   }, { timestamps: true });
 
   const modelName = `Habit_${userId}`;
@@ -49,20 +74,14 @@ const getUserHabitModel = (userId) => {
   return mongoose.models[modelName] || mongoose.model(modelName, habitSchema, collectionName);
 };
 
+// Initializes an empty habit collection for a user
 const createUserHabitCollection = async (userId) => {
   const HabitModel = getUserHabitModel(userId);
 
-  const dummy = new HabitModel({
-    name: "Dummy Habit",
-    icon: "/icons/dummy.png",
-    description: "This is a placeholder habit.",
-    minTime: 5,
-    maxTime: 10,
-    timeBlock: "morning"
-  });
+  // Creates the actual collection in MongoDB
+  await HabitModel.createCollection();
 
-  await dummy.save();
-  console.log(`Habit collection created for user: ${userId}`);
+  console.log(`Empty habit collection initialized for user: ${userId}`);
 };
 
 module.exports = {

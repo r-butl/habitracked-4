@@ -102,10 +102,40 @@ const getHabits = async (req, res) => {
   }
 };
 
+const createHabit = async (req, res) => {
+  try {
+    const { userId, name, icon, description, minTime, maxTime, timeBlock, visibility, start, end } = req.body;
+
+    if (!userId || !name || !start || !end || !visibility) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const HabitModel = getUserHabitModel(userId);
+
+    const newHabit = await HabitModel.create({
+      name,
+      icon,
+      description,
+      minTime,
+      maxTime,
+      timeBlock,
+      visibility,
+      start,
+      end
+    });
+
+    return res.status(201).json(newHabit);
+  } catch (error) {
+    console.error('Error creating habit:', error);
+    return res.status(500).json({ error: 'Server error while creating habit' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logout,
   getProfile,
-  getHabits
+  getHabits,
+  createHabit
 };

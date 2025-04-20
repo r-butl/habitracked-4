@@ -1,21 +1,25 @@
-import axios from 'axios';
 import { createContext, useState, useEffect } from 'react';
+import { getProfile } from '../utils/api';
 
 export const UserContext = createContext({});
 
-export function UserContextProvider({children}) {
+export function UserContextProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    axios.get('/profile')
-      .then(({ data }) => setUser(data))
-      .catch(() => setUser(null))
-      .finally(() => setReady(true));
-  }, []);
+    if (!user) {
+      getProfile()
+        .then(data => {
+          setUser(data);
+        })
+        .catch(err => {
+          console.error("Error fetching profile:", err);
+        });
+    }
+  }, [user]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, ready }}>
+    <UserContext.Provider value={{ user, setUser }}>
       {children}
     </UserContext.Provider>
   );

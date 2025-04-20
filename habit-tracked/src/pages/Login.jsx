@@ -1,6 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import axios from 'axios';
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/userContext";
@@ -14,7 +13,6 @@ export default function Login() {
 
   const loginUser = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
-    const { email, password } = data;
     try {
       // Attempt to send login credentials to the backend
       const res = await login(data);
