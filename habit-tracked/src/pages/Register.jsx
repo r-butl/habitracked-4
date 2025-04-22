@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import axios from 'axios'
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { register } from "../utils/api";
@@ -16,18 +15,21 @@ export default function Register() {
 
   const registerUser = async (e) => {
     e.preventDefault();
-    const {name, email, password} = data
     try {
-      const data = await register(data);
-      if(data.error){
-        toast.error(data.error)
+      const response = await register(data);
+      if (response.error) {
+        toast.error(response.error);
       } else {
-        setData({})
-        toast.success("Registration Successful. Welcome!")
-        navigate('/login')
+        setData({
+          name: '',
+          email: '',
+          password: ''
+        });
+        toast.success("Registration Successful. Welcome!");
+        navigate('/login');
       }
-    } catch(error) {
-      console.log(error)
+    } catch (error) {
+      console.log(error);
     }
   };
 

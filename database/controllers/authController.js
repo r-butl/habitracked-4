@@ -1,6 +1,6 @@
-const User = require('../models/user');
 const { hashPassword, comparePassword } = require('../helpers/auth');
 const jwt = require('jsonwebtoken');
+const { UserModel, createUserHabitCollection, getUserHabitModel } = require('../models/user');
 
 // Register endpoint
 const registerUser = async (req, res) => {
@@ -8,34 +8,32 @@ const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
     
     if (!name) {
-      return res.json({
-        error: 'name is required'
-      });
-    };
+      return res.json({ error: 'name is required' });
+    }
 
     if (!password || password.length < 6) {
-      return res.json({
-        error: 'password is required and should be at least 6 characters long'
-      });
-    };
+      return res.json({ error: 'password is required and should be at least 6 characters long' });
+    }
 
-    const exist = await User.findOne({ email });
+    const exist = await UserModel.findOne({ email });
     if (exist) {
-      return res.json({
-        error: 'email is taken already'
-      });
+      return res.json({ error: 'email is taken already' });
     }
 
     const hashedPassword = await hashPassword(password);
-    const user = await User.create({
+    const user = await UserModel.create({
       name,
       email,
       password: hashedPassword,
     });
 
+    // Initialize a habit collection with a dummy habit
+    await createUserHabitCollection(user._id);
+
     return res.json(user);
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -44,21 +42,15 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await UserModel.findOne({ email });
     if (!user) {
-      // If no user is found, return a 401 Unauthorized response
-      return res.status(401).json({
-        error: 'User not found'
-      });
+      return res.status(401).json({ error: 'User not found' });
     }
 
     const match = await comparePassword(password, user.password);
-     
     if (match) {
       jwt.sign(
-        { email: user.email, 
-          id: user._id, name: 
-          user.name },
+        { email: user.email, id: user._id, name: user.name },
         process.env.JWT_SECRET,
         {},
         (err, token) => {
@@ -92,11 +84,58 @@ const getProfile = (req, res) => {
   }
 };
 
-// Export all functions
+const getHabits = async (req, res) => {
+  try {
+    const userId = req.query.userId; // Grab userId from query parameter
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const HabitModel = getUserHabitModel(userId);
+    const habits = await HabitModel.find();
+
+    return res.json(habits);
+  } catch (error) {
+    console.error('Error fetching habits:', error);
+    return res.status(500).json({ error: 'Error fetching habits' });
+  }
+};
+
+const createHabit = async (req, res) => {
+  try {
+    const { userId, name, icon, description, minTime, maxTime, timeBlock, visibility, start, end } = req.body;
+
+    if (!userId || !name || !start || !end || !visibility) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const HabitModel = getUserHabitModel(userId);
+
+    const newHabit = await HabitModel.create({
+      name,
+      icon,
+      description,
+      minTime,
+      maxTime,
+      timeBlock,
+      visibility,
+      start,
+      end
+    });
+
+    return res.status(201).json(newHabit);
+  } catch (error) {
+    console.error('Error creating habit:', error);
+    return res.status(500).json({ error: 'Server error while creating habit' });
+  }
+};
+
 module.exports = {
-  //test,
   registerUser,
   loginUser,
   logout,
-  getProfile
+  getProfile,
+  getHabits,
+  createHabit
 };
