@@ -3,12 +3,14 @@ import { UserContext } from '../context/userContext';
 import { DayPilotCalendar } from "@daypilot/daypilot-lite-react";
 import { CreateHabitButton } from '../components/CreateHabitButton/CreateHabitButton';
 import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
+import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm'
 //import { useLocation } from 'react-router-dom';
 
 
 export default function Calendar() {
  const { user } = useContext(UserContext);
  const [showChooseHabit, setShowChooseHabit] = useState(false);
+ const [showCustomHabitForm, setShowCustomHabitForm] = useState(false);
  const onCreateClick = () => {
    setShowChooseHabit(true);
  }
@@ -26,21 +28,33 @@ export default function Calendar() {
        <div className="container bg-light mt-0">
            <h1 className="text-center fs-2">{user.name}'s Calendar </h1>
            <div>
-           <CreateHabitButton onClick={onCreateClick} />
-            {showChooseHabit && (
-              <ChooseHabitType 
-              show={showChooseHabit} 
-              onClose={() => {setShowChooseHabit(false)}} 
-              onSelectList={() => {
-                setShowChooseHabit(false);
-                alert("You chose curated habits");
-              }} 
-              onCreateCustomHabit={() => {
-                setShowChooseHabit(false);
-                alert("You chose custom habit.");
-              }}></ChooseHabitType>
-            )}
-           </div>
+              <CreateHabitButton onClick={onCreateClick} />
+
+              {showChooseHabit && (
+                <ChooseHabitType 
+                  show={showChooseHabit} 
+                  onClose={() => setShowChooseHabit(false)} 
+                  onSelectList={() => {
+                    setShowChooseHabit(false);
+                    alert("You chose curated habits");
+                  }} 
+                  onCreateCustomHabit={() => {
+                    setShowChooseHabit(false);
+                    setShowCustomHabitForm(true); // Show the form
+                  }}
+                />
+              )}
+
+              {showCustomHabitForm && (
+                <CustomHabitForm
+                  show={showCustomHabitForm}
+                  onHide={() => setShowCustomHabitForm(false)}
+                  onSubmit={() => {
+                    console.log("Habit created");
+                  }}
+                />
+              )}
+            </div>
            <div>
                <DayPilotCalendar
                viewType={'Week'}
