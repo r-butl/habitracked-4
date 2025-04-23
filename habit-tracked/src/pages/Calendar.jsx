@@ -6,6 +6,7 @@ import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
 import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm';
 import { getUserHabits, createHabit } from '../utils/api';
 import { CuratedHabitsDialog } from './CuratedHabitsDialog';
+import { ConfigureHabitDialog } from './ConfigureHabitDialog';
 
 export default function Calendar() {
   const { user } = useContext(UserContext);
@@ -14,6 +15,9 @@ export default function Calendar() {
   const [habits, setHabits] = useState([]);
   const calendarRef = useRef(null);
   const [showCuratedDialog, setShowCuratedDialog] = useState(false);
+  const [habitToConfigure, setHabitToConfigure] = useState(null);
+
+
 
 
   useEffect(() => {
@@ -144,19 +148,12 @@ export default function Calendar() {
             show={showCuratedDialog}
             onClose={() => setShowCuratedDialog(false)}
             onSelect={(habit) => {
-              createHabit(user.id, habit)
-                .then((createdHabit) => {
-                  setHabits(prev => [...prev, createdHabit]);
-                  alert(`Added "${habit.name}" to your calendar!`);
-                  setShowCuratedDialog(false);
-                })
-                .catch((err) => {
-                  console.error("Error adding curated habit:", err);
-                });
+              setHabitToConfigure(habit);     // Open the config modal for selected habit
+              setShowCuratedDialog(false);    // Hide the curated list
+              onCreateCustomHabit(habit);
             }}
           />
         )}
-
 
         {/* Custom Habit Form */}
         {showCustomHabitForm && (
