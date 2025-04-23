@@ -42,7 +42,7 @@ const getUserHabitModel = (userId) => {
     },
     timeBlock: {
       type: String,
-      enum: ['morning', 'midday', 'evening'],
+      enum: ['morning', 'afternoon', 'evening'],
       default: null
     },
     // controls whether habit is private or public

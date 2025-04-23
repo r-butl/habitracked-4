@@ -105,10 +105,11 @@ const getHabits = async (req, res) => {
 const createHabit = async (req, res) => {
   try {
     const { userId, name, icon, description, minTime, maxTime, timeBlock, visibility, start, end } = req.body;
-
-    if (!userId || !name || !start || !end || !visibility) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
+    if (!userId) return res.status(400).json({ error: `Missing userid` });
+    if (!name) return res.status(400).json({ error: `Missing name` });
+    if (!start) return res.status(400).json({ error: `Missing start` });
+    if (!end) return res.status(400).json({ error: `Missing end` });
+    if (visibility === undefined || visibility === null) return res.status(400).json({ error: `Missing visability` });
 
     const HabitModel = getUserHabitModel(userId);
 
@@ -127,6 +128,20 @@ const createHabit = async (req, res) => {
     return res.status(201).json(newHabit);
   } catch (error) {
     console.error('Error creating habit:', error);
+
+    if (error.name === 'ValidationError') {
+      // Extract the specific fields that caused the error
+      const fieldErrors = Object.keys(error.errors).map((field) => ({
+        field,
+        message: error.errors[field].message,
+      }));
+
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: fieldErrors,
+      });
+    }
+
     return res.status(500).json({ error: 'Server error while creating habit' });
   }
 };

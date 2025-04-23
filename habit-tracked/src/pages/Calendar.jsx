@@ -3,11 +3,13 @@ import { UserContext } from '../context/userContext';
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-react";
 import { CreateHabitButton } from '../components/CreateHabitButton/CreateHabitButton';
 import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
+import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm';
 import { getUserHabits, createHabit } from '../utils/api';
 
 export default function Calendar() {
   const { user } = useContext(UserContext);
   const [showChooseHabit, setShowChooseHabit] = useState(false);
+  const [showCustomHabitForm, setShowCustomHabitForm] = useState(false);
   const [habits, setHabits] = useState([]);
   const calendarRef = useRef(null);
 
@@ -29,27 +31,30 @@ export default function Calendar() {
     setShowChooseHabit(true);
   };
 
-  const onCreateCustomHabit = () => {
+  const onCreateCustomHabit = (newHabitData) => {
     setShowChooseHabit(false);
-
+  
     const date = new DayPilot.Date(); // UTC
     const startLocal = date.toDateLocal(); // JS local Date
-    const duration = 30;
-    const endLocal = new Date(startLocal.getTime() + duration * 60000);
-
+    const duration = 30;  // You can adjust the default duration
+    const endLocal = new Date(startLocal.getTime() + duration * 60000); // Set the end time based on duration
+  
+    // Constructing the new habit using form data + the additional calculated fields
     const newHabit = {
-      name: "Read a chapter",
-      icon: "/icons/book.png",
-      description: "Read one chapter from a book",
-      minTime: 20,
-      maxTime: 45,
-      timeBlock: "evening",
-      visibility: 1,
-      start: startLocal.toISOString(),
-      end: endLocal.toISOString(),
-      recurrence: "none"
+      name: newHabitData.name, // Habit name from form
+      icon: newHabitData.icon, // Icon from form (e.g., uploaded or default)
+      description: newHabitData.description, // Description from form
+      minTime: newHabitData.minTime, // Minimum time from form
+      maxTime: newHabitData.maxTime, // Maximum time from form
+      timeBlock: newHabitData.timeBlock, // Time block (morning, afternoon, etc.) from form
+      visibility: newHabitData.visibility === "public" ? 1 : 0, // Visibility (private/public) from form
+      start: startLocal.toISOString(), // Start time (calculated based on current date)
+      end: endLocal.toISOString(), // End time (calculated based on current date + duration)
+      recurrence: newHabitData.recurrence, // Recurrence (days of the week) from form
     };
+    console.log("Creating habit:", newHabit);
 
+    // Now use this `newHabit` to call createHabit
     createHabit(user.id, newHabit)
       .then((createdHabit) => {
         setHabits(prev => [...prev, createdHabit]);
@@ -123,14 +128,25 @@ export default function Calendar() {
                 setShowChooseHabit(false);
                 alert("You chose curated habits");
               }} 
-              onCreateCustomHabit={onCreateCustomHabit}
-              onCreateHabit={() => {
+              onCreateCustomHabit={() => {
                 setShowChooseHabit(false);
-                alert("You chose to create a custom habit");
+                setShowCustomHabitForm(true); // Show the form
               }}
             />
           )}
         </div>
+
+        {/* Custom Habit Form */}
+        {showCustomHabitForm && (
+          <CustomHabitForm
+            show={showCustomHabitForm}
+            onHide={() => setShowCustomHabitForm(false)}
+            onSubmit={(newHabitData) => {
+              onCreateCustomHabit(newHabitData); // Pass the form data here
+              setShowCustomHabitForm(false); // Hide the form after submission
+            }}
+          />
+        )}
 
         <div className="mt-4">
           <DayPilotCalendar
@@ -155,6 +171,7 @@ export default function Calendar() {
           <button className="btn btn-outline-primary" onClick={handleNext}>Next</button>
         </div>
 
+        {/* Displaying Habits */}
         <div className="mt-5">
           <h3 className="fs-4">Your Habits</h3>
           {habits.length === 0 ? (
