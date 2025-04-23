@@ -3,18 +3,18 @@ const { Schema } = mongoose;
 
 // --- User Schema ---
 const userSchema = new Schema({
-  name: { 
-    type: String, 
-    required: true 
+  name: {
+    type: String,
+    required: true
   },
-  email: { 
-    type: String, 
-    unique: true, 
-    required: true 
+  email: {
+    type: String,
+    unique: true,
+    required: true
   },
-  password: { 
-    type: String, 
-    required: true 
+  password: {
+    type: String,
+    required: true
   },
 }, { timestamps: true });
 
@@ -22,23 +22,23 @@ const UserModel = mongoose.model('User', userSchema);
 
 const getUserHabitModel = (userId) => {
   const habitSchema = new Schema({
-    name: { 
-      type: String, 
-      required: true 
+    name: {
+      type: String,
+      required: true
     },
-    icon: { 
-      type: String 
+    icon: {
+      type: String
     },
-    description: { 
-      type: String 
+    description: {
+      type: String
     },
     minTime: {
-      type: Number, 
-      required: true 
+      type: Number,
+      required: true
     },
-    maxTime: { 
-      type: Number, 
-      required: true 
+    maxTime: {
+      type: Number,
+      required: true
     },
     timeBlock: {
       type: String,
@@ -47,9 +47,9 @@ const getUserHabitModel = (userId) => {
     },
     // controls whether habit is private or public
     // 0 = private, 1 = public
-    visibility: { 
-      type: Number, 
-      required: true 
+    visibility: {
+      type: Number,
+      required: true
     },
 
     // Scheduling Fields
@@ -84,8 +84,59 @@ const createUserHabitCollection = async (userId) => {
   console.log(`Empty habit collection initialized for user: ${userId}`);
 };
 
+const curatedHabitSchema = new Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  image: {
+    type: String
+  },
+  description: {
+    type: String
+  },
+  minTime: {
+    type: Number,
+    required: true
+  },
+  maxTime: {
+    type: Number,
+    required: true
+  },
+  timeBlock: {
+    type: String,
+    enum: ['morning', 'afternoon', 'evening'],
+    default: null
+  },
+  // controls whether habit is private or public
+  // 0 = private, 1 = public
+  visibility: {
+    type: Number,
+    required: true
+  },
+
+  // Scheduling Fields
+  start: {
+    type: Date,
+    required: true
+  },
+  end: {
+    type: Date,
+    required: true
+  },
+  recurrence: {
+    type: String,
+    enum: ['none', 'daily', 'weekly'],
+    default: 'none'
+  }
+
+}, { timestamps: true });
+
+const CuratedHabitModel = mongoose.model('CuratedHabit', curatedHabitSchema, 'curatedHabits');
+
 module.exports = {
   UserModel,
   getUserHabitModel,
-  createUserHabitCollection
+  createUserHabitCollection,
+  CuratedHabitModel
 };
