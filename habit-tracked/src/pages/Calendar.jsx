@@ -5,6 +5,7 @@ import { CreateHabitButton } from '../components/CreateHabitButton/CreateHabitBu
 import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
 import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm';
 import { getUserHabits, createHabit } from '../utils/api';
+import { CuratedHabitsDialog } from './CuratedHabitsDialog';
 
 export default function Calendar() {
   const { user } = useContext(UserContext);
@@ -12,6 +13,8 @@ export default function Calendar() {
   const [showCustomHabitForm, setShowCustomHabitForm] = useState(false);
   const [habits, setHabits] = useState([]);
   const calendarRef = useRef(null);
+  const [showCuratedDialog, setShowCuratedDialog] = useState(false);
+
 
   useEffect(() => {
     const fetchHabits = async () => {
@@ -33,12 +36,12 @@ export default function Calendar() {
 
   const onCreateCustomHabit = (newHabitData) => {
     setShowChooseHabit(false);
-  
+
     const date = new DayPilot.Date(); // UTC
     const startLocal = date.toDateLocal(); // JS local Date
     const duration = 30;  // You can adjust the default duration
     const endLocal = new Date(startLocal.getTime() + duration * 60000); // Set the end time based on duration
-  
+
     // Constructing the new habit using form data + the additional calculated fields
     const newHabit = {
       name: newHabitData.name, // Habit name from form
@@ -121,13 +124,13 @@ export default function Calendar() {
         <div>
           <CreateHabitButton onClick={onCreateClick} />
           {showChooseHabit && (
-            <ChooseHabitType 
-              show={showChooseHabit} 
-              onClose={() => setShowChooseHabit(false)} 
+            <ChooseHabitType
+              show={showChooseHabit}
+              onClose={() => setShowChooseHabit(false)}
               onSelectList={() => {
                 setShowChooseHabit(false);
-                alert("You chose curated habits");
-              }} 
+                setShowCuratedDialog(true);
+              }}
               onCreateCustomHabit={() => {
                 setShowChooseHabit(false);
                 setShowCustomHabitForm(true); // Show the form
@@ -135,6 +138,25 @@ export default function Calendar() {
             />
           )}
         </div>
+
+        {showCuratedDialog && (
+          <CuratedHabitsDialog
+            show={showCuratedDialog}
+            onClose={() => setShowCuratedDialog(false)}
+            onSelect={(habit) => {
+              createHabit(user.id, habit)
+                .then((createdHabit) => {
+                  setHabits(prev => [...prev, createdHabit]);
+                  alert(`Added "${habit.name}" to your calendar!`);
+                  setShowCuratedDialog(false);
+                })
+                .catch((err) => {
+                  console.error("Error adding curated habit:", err);
+                });
+            }}
+          />
+        )}
+
 
         {/* Custom Habit Form */}
         {showCustomHabitForm && (

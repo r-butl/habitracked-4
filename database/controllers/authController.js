@@ -1,6 +1,6 @@
 const { hashPassword, comparePassword } = require('../helpers/auth');
 const jwt = require('jsonwebtoken');
-const { UserModel, createUserHabitCollection, getUserHabitModel } = require('../models/user');
+const { UserModel, createUserHabitCollection, getUserHabitModel, CuratedHabitModel } = require('../models/user');
 
 // Register endpoint
 const registerUser = async (req, res) => {
@@ -146,11 +146,24 @@ const createHabit = async (req, res) => {
   }
 };
 
+
+const getCuratedHabits = async (req, res) => {
+  try {
+    const curatedHabits = await CuratedHabitModel.find();
+    return res.json(curatedHabits);
+  } catch (error) {
+    console.error('Error fetching curated habits:', error);
+    return res.status(500).json({ error: 'Error fetching curated habits' });
+  }
+};
+
+
 module.exports = {
   registerUser,
   loginUser,
   logout,
   getProfile,
   getHabits,
-  createHabit
+  createHabit,
+  getCuratedHabits
 };

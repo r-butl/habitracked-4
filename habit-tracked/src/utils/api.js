@@ -37,3 +37,8 @@ export const getUserHabits = async (userId) => {
     const response = await api.get(`/habits?userId=${userId}`);
     return response.data;
 };
+
+export const getCuratedHabits = async() => {
+    const response = await api.get('/curatedHabits');
+    return await response.data;
+  };
