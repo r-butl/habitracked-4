@@ -1,12 +1,13 @@
 const { hashPassword, comparePassword } = require('../helpers/auth');
 const jwt = require('jsonwebtoken');
-const { UserModel, createUserHabitCollection, getUserHabitModel, CuratedHabitModel } = require('../models/user');
+const UserModel = require('../models/user');
+const { HabitModel, CuratedHabitModel } = require('../models/habit');
 
 // Register endpoint
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    
+
     if (!name) {
       return res.json({ error: 'name is required' });
     }
@@ -26,9 +27,6 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
     });
-
-    // Initialize a habit collection with a dummy habit
-    await createUserHabitCollection(user._id);
 
     return res.json(user);
   } catch (error) {
@@ -67,11 +65,13 @@ const loginUser = async (req, res) => {
   }
 };
 
+// Logout endpoint
 const logout = (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ message: 'Logged out successfully' });
 };
 
+// Get profile endpoint
 const getProfile = (req, res) => {
   const { token } = req.cookies;
   if (token) {
@@ -84,17 +84,16 @@ const getProfile = (req, res) => {
   }
 };
 
+// Get habits endpoint
 const getHabits = async (req, res) => {
   try {
-    const userId = req.query.userId; // Grab userId from query parameter
+    const userId = req.query.userId;
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    const HabitModel = getUserHabitModel(userId);
-    const habits = await HabitModel.find();
-
+    const habits = await HabitModel.find({ userId });
     return res.json(habits);
   } catch (error) {
     console.error('Error fetching habits:', error);
@@ -102,18 +101,11 @@ const getHabits = async (req, res) => {
   }
 };
 
+// Create habit endpoint
 const createHabit = async (req, res) => {
   try {
-    const { userId, name, icon, description, minTime, maxTime, timeBlock, visibility, start, end } = req.body;
-    if (!userId) return res.status(400).json({ error: `Missing userid` });
-    if (!name) return res.status(400).json({ error: `Missing name` });
-    if (!start) return res.status(400).json({ error: `Missing start` });
-    if (!end) return res.status(400).json({ error: `Missing end` });
-    if (visibility === undefined || visibility === null) return res.status(400).json({ error: `Missing visability` });
-
-    const HabitModel = getUserHabitModel(userId);
-
-    const newHabit = await HabitModel.create({
+    const {
+      userId,
       name,
       icon,
       description,
@@ -122,7 +114,27 @@ const createHabit = async (req, res) => {
       timeBlock,
       visibility,
       start,
-      end
+      end,
+      recurrence
+    } = req.body;
+
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    if (!name) return res.status(400).json({ error: 'Missing name' });
+    if (!start) return res.status(400).json({ error: 'Missing start' });
+    if (!end) return res.status(400).json({ error: 'Missing end' });
+
+    const newHabit = await HabitModel.create({
+      userId,
+      name,
+      icon,
+      description,
+      minTime,
+      maxTime,
+      timeBlock,
+      visibility,
+      start,
+      end,
+      recurrence
     });
 
     return res.status(201).json(newHabit);
@@ -130,7 +142,6 @@ const createHabit = async (req, res) => {
     console.error('Error creating habit:', error);
 
     if (error.name === 'ValidationError') {
-      // Extract the specific fields that caused the error
       const fieldErrors = Object.keys(error.errors).map((field) => ({
         field,
         message: error.errors[field].message,
@@ -146,7 +157,7 @@ const createHabit = async (req, res) => {
   }
 };
 
-
+// Get curated habits endpoint
 const getCuratedHabits = async (req, res) => {
   try {
     const curatedHabits = await CuratedHabitModel.find();
@@ -156,7 +167,6 @@ const getCuratedHabits = async (req, res) => {
     return res.status(500).json({ error: 'Error fetching curated habits' });
   }
 };
-
 
 module.exports = {
   registerUser,
