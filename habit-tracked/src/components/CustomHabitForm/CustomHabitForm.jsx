@@ -47,9 +47,7 @@ export const CustomHabitForm = ({ onSubmit }) => {
       maxTime: parseInt(maxTime),
       timeBlock,
       visibility,
-      recurrence: Object.keys(recurrence)
-        .filter((day) => recurrence[day])
-        .join(", "), // Join selected days
+      recurrence: Object.keys(recurrence).filter((day) => recurrence[day]) || [], // now expects array of strings
       start: new Date(start).toISOString(),
       end: new Date(end).toISOString(),
     };

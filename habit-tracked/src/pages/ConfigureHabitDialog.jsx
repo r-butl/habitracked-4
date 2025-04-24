@@ -20,22 +20,22 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
 
     const handleSubmit = () => {
         const selectedDays = Object.keys(recurrence).filter((day) => recurrence[day]);
-
-        if (!timeBlock || !start || !end || selectedDays.length === 0) {
+        
+        if (!timeBlock || !start || !end) {
             alert("Please complete all fields.");
             return;
         }
-
+        
         const habitData = {
             ...habit,
             timeBlock,
-            minTime: parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0)), // minutes
+            minTime: parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0)),
             maxTime: parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)),
             start: new Date(start).toISOString(),
             end: new Date(end).toISOString(),
-            recurrence: selectedDays.join(", "),
+            recurrence: selectedDays, // pass array for new recurrence structure
         };
-
+        
         onSubmit(habitData);
     };
 
