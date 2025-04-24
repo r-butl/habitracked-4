@@ -6,7 +6,7 @@ import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
 import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm';
 import { getUserHabits, createHabit } from '../utils/api';
 import { CuratedHabitsDialog } from './CuratedHabitsDialog';
-import { ConfigureHabitDialog } from './ConfigureHabitDialog';
+// import { ConfigureHabitDialog } from './ConfigureHabitDialog';
 
 export default function Calendar() {
   const { user } = useContext(UserContext);
@@ -15,10 +15,7 @@ export default function Calendar() {
   const [habits, setHabits] = useState([]);
   const calendarRef = useRef(null);
   const [showCuratedDialog, setShowCuratedDialog] = useState(false);
-  const [habitToConfigure, setHabitToConfigure] = useState(null);
-
-
-
+  // const [habitToConfigure, setHabitToConfigure] = useState(null);
 
   useEffect(() => {
     const fetchHabits = async () => {
@@ -40,31 +37,26 @@ export default function Calendar() {
 
   const onCreateCustomHabit = (newHabitData) => {
     setShowChooseHabit(false);
-
-    const date = new DayPilot.Date(); // UTC
-    const startLocal = date.toDateLocal(); // JS local Date
-    const duration = 30;  // You can adjust the default duration
-    const endLocal = new Date(startLocal.getTime() + duration * 60000); // Set the end time based on duration
-
-    // Constructing the new habit using form data + the additional calculated fields
+  
+    const startLocal = new Date(newHabitData.start);
+    const endLocal = new Date(newHabitData.end);
+  
     const newHabit = {
-      name: newHabitData.name, // Habit name from form
-      icon: newHabitData.icon, // Icon from form (e.g., uploaded or default)
-      description: newHabitData.description, // Description from form
-      minTime: newHabitData.minTime, // Minimum time from form
-      maxTime: newHabitData.maxTime, // Maximum time from form
-      timeBlock: newHabitData.timeBlock, // Time block (morning, afternoon, etc.) from form
-      visibility: newHabitData.visibility === "public" ? 1 : 0, // Visibility (private/public) from form
-      start: startLocal.toISOString(), // Start time (calculated based on current date)
-      end: endLocal.toISOString(), // End time (calculated based on current date + duration)
-      recurrence: newHabitData.recurrence, // Recurrence (days of the week) from form
+      name: newHabitData.name,
+      icon: newHabitData.icon,
+      description: newHabitData.description,
+      minTime: newHabitData.minTime,
+      maxTime: newHabitData.maxTime,
+      timeBlock: newHabitData.timeBlock,
+      visibility: newHabitData.visibility === "public" ? 1 : 0,
+      start: startLocal.toISOString(),
+      end: endLocal.toISOString(),
+      recurrence: newHabitData.recurrence,
     };
-    console.log("Creating habit:", newHabit);
-
-    // Now use this `newHabit` to call createHabit
+  
     createHabit(user.id, newHabit)
       .then((createdHabit) => {
-        setHabits(prev => [...prev, createdHabit]);
+        setHabits((prev) => [...prev, createdHabit]);
         alert("Custom habit created successfully!");
       })
       .catch((err) => {
@@ -72,20 +64,74 @@ export default function Calendar() {
       });
   };
 
+  // Recurring events generator
+  // This function generates all the recurring events for a given habit
+  // based on the specified recurrence days and the given date range.
+  // It takes into account the start and end times of the habit.
+  const generateRecurringEvents = (habit, rangeStart, rangeEnd) => {
+    const result = [];
+  
+    if (!Array.isArray(habit.recurrence) || habit.recurrence.length === 0) {
+      result.push(habit);
+      return result;
+    }
+  
+    const dayMap = {
+      sunday: 0,
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6
+    };
+  
+    const habitStart = new Date(habit.start);
+    const habitEnd = new Date(habit.end);
+    const duration = habitEnd.getTime() - habitStart.getTime();
+  
+    const startHour = habitStart.getHours();
+    const startMinute = habitStart.getMinutes();
+  
+    const current = new Date(rangeStart);
+    while (current <= rangeEnd) {
+      const localDay = current.getDay(); // 0 = Sunday
+      const dayName = Object.keys(dayMap).find(day => dayMap[day] === localDay);
+  
+      if (habit.recurrence.includes(dayName)) {
+        const start = new Date(current);
+        start.setHours(startHour, startMinute, 0, 0); // Set time from original habit
+  
+        const end = new Date(start.getTime() + duration);
+  
+        result.push({
+          ...habit,
+          start,
+          end
+        });
+      }
+  
+      current.setDate(current.getDate() + 1);
+    }
+  
+    return result;
+  };  
+
+  const rangeStart = new Date(); // today
+  const rangeEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // one week
+
   const calendarEvents = habits
-    .filter(habit => habit.start && habit.end)
+    .flatMap(habit => generateRecurringEvents(habit, rangeStart, rangeEnd))
     .map((habit, index) => {
-      const startLocal = new Date(habit.start); // Convert UTC to local
+      const startLocal = new Date(habit.start);
       const endLocal = new Date(habit.end);
 
-      const event = {
-        id: habit._id || index,
+      return {
+        id: habit._id || `${habit.name}-${index}`,
         text: habit.name,
         start: new DayPilot.Date(startLocal),
         end: new DayPilot.Date(endLocal)
       };
-      console.log("Calendar Event (local):", event);
-      return event;
     });
 
   useEffect(() => {
@@ -137,7 +183,7 @@ export default function Calendar() {
               }}
               onCreateCustomHabit={() => {
                 setShowChooseHabit(false);
-                setShowCustomHabitForm(true); // Show the form
+                setShowCustomHabitForm(true);
               }}
             />
           )}
@@ -148,21 +194,22 @@ export default function Calendar() {
             show={showCuratedDialog}
             onClose={() => setShowCuratedDialog(false)}
             onSelect={(habit) => {
-              setHabitToConfigure(habit);     // Open the config modal for selected habit
-              setShowCuratedDialog(false);    // Hide the curated list
-              onCreateCustomHabit(habit);
+              const recurrenceArray = typeof habit.recurrence === 'string'
+                ? habit.recurrence.split(',').map(day => day.trim().toLowerCase())
+                : habit.recurrence;
+            
+              onCreateCustomHabit({ ...habit, recurrence: recurrenceArray });
             }}
           />
         )}
 
-        {/* Custom Habit Form */}
         {showCustomHabitForm && (
           <CustomHabitForm
             show={showCustomHabitForm}
             onHide={() => setShowCustomHabitForm(false)}
             onSubmit={(newHabitData) => {
-              onCreateCustomHabit(newHabitData); // Pass the form data here
-              setShowCustomHabitForm(false); // Hide the form after submission
+              onCreateCustomHabit(newHabitData);
+              setShowCustomHabitForm(false);
             }}
           />
         )}
@@ -178,19 +225,16 @@ export default function Calendar() {
           />
         </div>
 
-        {/* Local time info */}
         <p className="text-center text-muted">
           Times shown in your local timezone ({Intl.DateTimeFormat().resolvedOptions().timeZone})
         </p>
 
-        {/* Navigation Buttons */}
         <div className="d-flex justify-content-center gap-2 my-3">
           <button className="btn btn-outline-primary" onClick={handlePrevious}>Previous</button>
           <button className="btn btn-outline-secondary" onClick={handleToday}>Today</button>
           <button className="btn btn-outline-primary" onClick={handleNext}>Next</button>
         </div>
 
-        {/* Displaying Habits */}
         <div className="mt-5">
           <h3 className="fs-4">Your Habits</h3>
           {habits.length === 0 ? (
