@@ -136,7 +136,20 @@ const createHabit = async (req, res) => {
       end,
       recurrence
     });
-
+    if (visibility == 1){
+      const newcuratedHabit = await CuratedHabitModel.create({
+        name,
+        icon,
+        description,
+        minTime,
+        maxTime,
+        timeBlock,
+        visibility,
+        start,
+        end,
+        recurrence
+      });
+    }
     return res.status(201).json(newHabit);
   } catch (error) {
     console.error('Error creating habit:', error);
