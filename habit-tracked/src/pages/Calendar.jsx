@@ -6,6 +6,7 @@ import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
 import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm';
 import { getUserHabits, createHabit } from '../utils/api';
 import { CuratedHabitsDialog } from './CuratedHabitsDialog';
+import { Popup } from '../components/Popup/Popup';
 // import { ConfigureHabitDialog } from './ConfigureHabitDialog';
 
 export default function Calendar() {
@@ -15,6 +16,8 @@ export default function Calendar() {
   const [habits, setHabits] = useState([]);
   const calendarRef = useRef(null);
   const [showCuratedDialog, setShowCuratedDialog] = useState(false);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
   // const [habitToConfigure, setHabitToConfigure] = useState(null);
 
   useEffect(() => {
@@ -57,10 +60,14 @@ export default function Calendar() {
     createHabit(user.id, newHabit)
       .then((createdHabit) => {
         setHabits((prev) => [...prev, createdHabit]);
-        alert("Custom habit created successfully!");
+        // alert("Custom habit created successfully!");
+        setPopupMessage("Habit created successfully!");
+        setIsPopupVisible(true);
       })
       .catch((err) => {
-        console.error("Failed to create custom habit:", err);
+        console.error("Failed to create habit:", err);
+        setPopupMessage("Failed to create habit. Please try again.");
+        setIsPopupVisible(true);
       });
   };
 
@@ -197,7 +204,7 @@ export default function Calendar() {
               const recurrenceArray = typeof habit.recurrence === 'string'
                 ? habit.recurrence.split(',').map(day => day.trim().toLowerCase())
                 : habit.recurrence;
-            
+              setShowCuratedDialog(false);
               onCreateCustomHabit({ ...habit, recurrence: recurrenceArray });
             }}
           />
@@ -249,6 +256,15 @@ export default function Calendar() {
             </ul>
           )}
         </div>
+        {isPopupVisible && (
+          <div>
+            <Popup
+              isVisible={isPopupVisible}
+              message={popupMessage}
+              onClose={() => setIsPopupVisible(false)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
