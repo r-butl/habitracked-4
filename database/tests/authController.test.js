@@ -2,8 +2,11 @@
 const request = require("supertest");
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const { test, registerUser, loginUser, logout, getProfile } = require("../controllers/authController");
-const User = require("../models/user");
+const { registerUser, loginUser, logout, getProfile, getHabits, createHabit, getCuratedHabits } = require("../controllers/authController");
+const { router } = require("../routes/record.js");
+const {   UserModel, getUserHabitModel, createUserHabitCollection, CuratedHabitModel } = require("../models/user");
+
+
 const jwt = require("jsonwebtoken");
 
 jest.setTimeout(10000);
@@ -20,7 +23,6 @@ const { hashPassword, comparePassword } = require("../helpers/auth");
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.get("/test", test);
 app.post("/register", registerUser);
 app.post("/login", loginUser);
 app.post("/logout", logout);
@@ -33,9 +35,9 @@ describe("Auth Controller", () => {
 
   test("POST /register - should register a new user", async () => {
     const mockUser = { name: "John Doe", email: "john@example.com", password: "hashed_password" };
-    User.findOne.mockResolvedValue(null);
+    UserModel.findOne.mockResolvedValue(null);
     hashPassword.mockResolvedValue("hashed_password");
-    User.create.mockResolvedValue(mockUser);
+    UserModel.create.mockResolvedValue(mockUser);
 
     const response = await request(app).post("/register").send({
       name: "John Doe",
@@ -45,9 +47,9 @@ describe("Auth Controller", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(mockUser);
-    expect(User.findOne).toHaveBeenCalledWith({ email: "john@example.com" });
+    expect(UserModel.findOne).toHaveBeenCalledWith({ email: "john@example.com" });
     expect(hashPassword).toHaveBeenCalledWith("password123");
-    expect(User.create).toHaveBeenCalledWith({
+    expect(UserModel.create).toHaveBeenCalledWith({
       name: "John Doe",
       email: "john@example.com",
       password: "hashed_password",
@@ -55,7 +57,7 @@ describe("Auth Controller", () => {
   });
 
   test("POST /register - should return error if email is already taken", async () => {
-    User.findOne.mockResolvedValue({ email: "john@example.com" });
+    UserModel.findOne.mockResolvedValue({ email: "john@example.com" });
 
     const response = await request(app).post("/register").send({
       name: "John Doe",
@@ -69,7 +71,7 @@ describe("Auth Controller", () => {
 
   test("POST /login - should log in a user and return a token", async () => {
     const mockUser = { _id: "123", name: "John Doe", email: "john@example.com", password: "hashed_password" };
-    User.findOne.mockResolvedValue(mockUser);
+    UserModel.findOne.mockResolvedValue(mockUser);
     comparePassword.mockResolvedValue(true);
     jwt.sign.mockImplementation((payload, secret, options, callback) => callback(null, "mock_token"));
 
@@ -81,7 +83,7 @@ describe("Auth Controller", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(mockUser);
     expect(response.headers["set-cookie"]).toBeDefined();
-    expect(User.findOne).toHaveBeenCalledWith({ email: "john@example.com" });
+    expect(UserModel.findOne).toHaveBeenCalledWith({ email: "john@example.com" });
     expect(comparePassword).toHaveBeenCalledWith("password123", "hashed_password");
     expect(jwt.sign).toHaveBeenCalledWith(
       { email: "john@example.com", id: "123", name: "John Doe" },
@@ -93,7 +95,7 @@ describe("Auth Controller", () => {
 
   test("POST /login - should return error if passwords do not match", async () => {
     const mockUser = { _id: "123", name: "John Doe", email: "john@example.com", password: "hashed_password" };
-    User.findOne.mockResolvedValue(mockUser);
+    UserModel.findOne.mockResolvedValue(mockUser);
     comparePassword.mockResolvedValue(false);
 
     const response = await request(app).post("/login").send({
