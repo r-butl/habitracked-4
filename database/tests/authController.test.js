@@ -3,22 +3,22 @@ const request = require("supertest");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const { registerUser, loginUser, logout, getProfile, getHabits, createHabit, getCuratedHabits } = require("../controllers/authController");
-const { router } = require("../routes/record.js");
-const {   UserModel, getUserHabitModel, createUserHabitCollection, CuratedHabitModel } = require("../models/user");
-
+const UserModel = require("../models/user");
+const { HabitModel, CuratedHabitModel } = require("../models/habit");
+const { hashPassword, comparePassword } = require("../helpers/auth");
 
 const jwt = require("jsonwebtoken");
 
 jest.setTimeout(10000);
 jest.mock("../models/user");
 jest.mock("jsonwebtoken");
+jest.mock("../models/habit");
 
 // ✅ Explicitly mock auth helpers here only
 jest.mock("../helpers/auth", () => ({
   hashPassword: jest.fn(),
   comparePassword: jest.fn(),
 }));
-const { hashPassword, comparePassword } = require("../helpers/auth");
 
 const app = express();
 app.use(express.json());
@@ -27,6 +27,9 @@ app.post("/register", registerUser);
 app.post("/login", loginUser);
 app.post("/logout", logout);
 app.get("/profile", getProfile);
+app.get("/habits", getHabits);
+app.post("/habits", createHabit);
+app.get("/curated-habits", getCuratedHabits);
 
 describe("Auth Controller", () => {
   afterEach(() => {
@@ -130,4 +133,127 @@ describe("Auth Controller", () => {
     expect(response.status).toBe(200);
     expect(response.body).toBeNull();
   });
+
+
+  describe("GET /habits", () => {
+    test("should return habits for a valid userId", async () => {
+      const mockHabits = [{ name: "Test Habit", userId: "abc123" }];
+      HabitModel.find.mockResolvedValue(mockHabits);
+
+      const response = await request(app).get("/habits").query({ userId: "abc123" });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(mockHabits);
+      expect(HabitModel.find).toHaveBeenCalledWith({ userId: "abc123" });
+    });
+
+    test("should return 400 if userId is missing", async () => {
+      const response = await request(app).get("/habits");
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("User ID is required");
+    });
+
+    test("should return 500 on DB error", async () => {
+      HabitModel.find.mockRejectedValue(new Error("DB error"));
+      const response = await request(app).get("/habits").query({ userId: "abc123" });
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe("Error fetching habits");
+    });
+  });
+
+  describe("POST /habits", () => {
+    const validHabit = {
+      userId: "abc123",
+      name: "Test Habit",
+      icon: "🔥",
+      description: "desc",
+      minTime: 10,
+      maxTime: 20,
+      timeBlock: "morning",
+      visibility: "private",
+      start: "2024-01-01",
+      end: "2024-12-31",
+      recurrence: "daily"
+    };
+
+    test("should create a habit with valid data", async () => {
+      HabitModel.create.mockResolvedValue(validHabit);
+
+      const response = await request(app).post("/habits").send(validHabit);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(validHabit);
+      expect(HabitModel.create).toHaveBeenCalledWith(validHabit);
+    });
+
+    test("should return 400 if userId is missing", async () => {
+      const { userId, ...body } = validHabit;
+      const response = await request(app).post("/habits").send(body);
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("Missing userId");
+    });
+
+    test("should return 400 if name is missing", async () => {
+      const { name, ...body } = validHabit;
+      const response = await request(app).post("/habits").send(body);
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("Missing name");
+    });
+
+    test("should return 400 if start is missing", async () => {
+      const { start, ...body } = validHabit;
+      const response = await request(app).post("/habits").send(body);
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("Missing start");
+    });
+
+    test("should return 400 if end is missing", async () => {
+      const { end, ...body } = validHabit;
+      const response = await request(app).post("/habits").send(body);
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("Missing end");
+    });
+
+    test("should return 400 on validation error", async () => {
+      const validationError = new Error("Validation failed");
+      validationError.name = "ValidationError";
+      validationError.errors = {
+        name: { message: "Name is required" }
+      };
+      HabitModel.create.mockRejectedValue(validationError);
+
+      const response = await request(app).post("/habits").send(validHabit);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("Validation failed");
+      expect(response.body.details).toEqual([{ field: "name", message: "Name is required" }]);
+    });
+
+    test("should return 500 on server error", async () => {
+      HabitModel.create.mockRejectedValue(new Error("DB error"));
+      const response = await request(app).post("/habits").send(validHabit);
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe("Server error while creating habit");
+    });
+  });
+
+  describe("GET /curated-habits", () => {
+    test("should return curated habits", async () => {
+      const curated = [{ name: "Drink Water" }];
+      CuratedHabitModel.find.mockResolvedValue(curated);
+
+      const response = await request(app).get("/curated-habits");
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(curated);
+      expect(CuratedHabitModel.find).toHaveBeenCalled();
+    });
+
+    test("should return 500 on DB error", async () => {
+      CuratedHabitModel.find.mockRejectedValue(new Error("DB error"));
+      const response = await request(app).get("/curated-habits");
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe("Error fetching curated habits");
+    });
+  });
+
 });
