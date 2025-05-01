@@ -168,15 +168,14 @@ const getCuratedHabits = async (req, res) => {
   }
 };
 
-
 // Creates a log for the user
 const createLog = async (req, res) => {
   try {
     const { duration } = req.body;
-    const { habitId } = req.params;
+    const { habitID } = req.params;
     
     // Check all fields
-    if (!habitId) {
+    if (!habitID) {
       return res.status(400).json( {error: 'Habit name is required.' });
     }
     if (duration == null) {
@@ -184,9 +183,9 @@ const createLog = async (req, res) => {
     }
 
     // Attempt to find the user and habit 
-    const habit = await HabitModel.findById(habitId);
+    const habit = await HabitModel.findById(habitID);
     if (!habit) {
-      return res.status(404).json( {error: 'Habit not found'});
+      return res.status(404).json( {error: 'Habit not found' });
     }
 
     const newLog = {
@@ -207,7 +206,44 @@ const createLog = async (req, res) => {
 }
 
 // Grabs the list of logs for a user given a specific time frame
+const getLogs = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+    const { habitID } = req.params;
 
+    if (!habitID) {
+      return res.status(404).json( {error: 'Habit not found' });
+    }
+    if (!startDate || isNaN(Date.parser(startDate))){
+      return res.status(400).json({ error: 'Start date is required and must be a valid date' });
+    }
+    if (!endDate || isNaN(Date.parser(endDate))){
+      return res.status(400).json({ error: 'End date is required and must be a valid date.'})
+    }
+
+    const habit = await HabitModel.findById(habitID);
+    if (!habit) {
+      return res.status(404).json( {error: 'Habit not found' })
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const filteredLogs = habit.logs.filter(log => {
+      const logDate = new Date(log.date);
+      return logDate >= start && logDate <= end;
+    });
+
+    return res.status(200).json({ 
+      habitID: habitID,
+      logs: filteredLogs
+    });
+
+  } catch(error){
+    console.error("Internal service error.");
+    return res.status(500).json({ error: 'Error getting logs.' })
+  }
+}
 
 module.exports = {
   registerUser,
@@ -217,5 +253,6 @@ module.exports = {
   getHabits,
   createHabit,
   getCuratedHabits,
-  createLog
+  createLog,
+  getLogs
 };

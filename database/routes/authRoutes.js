@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const cors = require("cors");
-const { registerUser, loginUser, logout, getProfile, getHabits, createHabit, getCuratedHabits, createLog } = require("../controllers/authController");
+const { registerUser, loginUser, logout, getProfile, getHabits, createHabit, getCuratedHabits, createLog, getLogs } = require("../controllers/authController");
 // const { test, registerUser, loginUser, logout, getProfile } = require("../controllers/authController"); // uncomment for testing
 
 router.use(
@@ -20,6 +20,7 @@ router.post('/logout', logout);
 router.get('/habits', getHabits);
 router.get('/curatedHabits', getCuratedHabits);
 router.post('/habits/create', createHabit);
-router.post('/habits/:habitId/logs', createLog);
+router.post('/habits/:habitId/createLog', createLog);
+router.post('/habit/:habitId/getlogs', getLogs)
 
 module.exports = router;

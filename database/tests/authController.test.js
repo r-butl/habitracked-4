@@ -2,15 +2,15 @@
 const request = require("supertest");
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const {  registerUser, loginUser, logout, getProfile, createLog } = require("../controllers/authController"); //test,
+const {  registerUser, loginUser, logout, getProfile, createLog, getLogs } = require("../controllers/authController"); //test,
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+
 jest.mock('../models/habit', () => ({
   HabitModel: { findById: jest.fn() },
   CuratedHabitModel: {}
 }));
 const { HabitModel, CuratedHabitModel } = require('../models/habit');
-
 
 jest.setTimeout(10000);
 jest.mock("../models/user");
@@ -209,6 +209,97 @@ describe("Auth Controller", () => {
       await createLog(req, res);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Error creating log.' });
+    });
+  });
+
+  describe('getLogs', () => {
+    let res;
+  
+    beforeEach(() => {
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+    });
+  
+    it('should return 400 if startDate is invalid', async () => {
+      const req = {
+        params: { habitID: 'abc123' },
+        body: { startDate: 'invalid-date', endDate: '2024-01-01' }
+      };
+  
+      await getLogs(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Start date is required and must be a valid date'
+      });
+    });
+  
+    it('should return 400 if endDate is invalid', async () => {
+      const req = {
+        params: { habitID: 'abc123' },
+        body: { startDate: '2024-01-01', endDate: 'invalid-date' }
+      };
+  
+      await getLogs(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'End date is required and must be a valid date.'
+      });
+    });
+  
+    it('should return 404 if habitID is missing', async () => {
+      const req = { params: {}, body: { startDate: '2024-01-01', endDate: '2024-01-02' } };
+  
+      await getLogs(req, res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Habit not found' });
+    });
+  
+    it('should return 404 if habit not found in DB', async () => {
+      HabitModel.findById.mockResolvedValue(null);
+      const req = {
+        params: { habitID: 'abc123' },
+        body: { startDate: '2024-01-01', endDate: '2024-01-02' }
+      };
+  
+      await getLogs(req, res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Habit not found' });
+    });
+  
+    it('should return filtered logs between dates', async () => {
+      const mockLogs = [
+        { date: '2024-01-01T12:00:00Z', duration: 30 },
+        { date: '2024-01-05T12:00:00Z', duration: 15 },
+        { date: '2024-01-10T12:00:00Z', duration: 45 }
+      ];
+      HabitModel.findById.mockResolvedValue({ logs: mockLogs });
+  
+      const req = {
+        params: { habitID: 'abc123' },
+        body: { startDate: '2024-01-02', endDate: '2024-01-08' }
+      };
+  
+      await getLogs(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        habitID: 'abc123',
+        logs: [mockLogs[1]]
+      });
+    });
+  
+    it('should return 500 if an exception occurs', async () => {
+      HabitModel.findById.mockRejectedValue(new Error('DB failure'));
+  
+      const req = {
+        params: { habitID: 'abc123' },
+        body: { startDate: '2024-01-01', endDate: '2024-01-10' }
+      };
+  
+      await getLogs(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Error getting logs.' });
     });
   });
 });
