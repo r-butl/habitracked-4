@@ -2,9 +2,15 @@
 const request = require("supertest");
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const { test, registerUser, loginUser, logout, getProfile } = require("../controllers/authController");
+const {  registerUser, loginUser, logout, getProfile, createLog } = require("../controllers/authController"); //test,
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+jest.mock('../models/habit', () => ({
+  HabitModel: { findById: jest.fn() },
+  CuratedHabitModel: {}
+}));
+const { HabitModel, CuratedHabitModel } = require('../models/habit');
+
 
 jest.setTimeout(10000);
 jest.mock("../models/user");
@@ -20,7 +26,7 @@ const { hashPassword, comparePassword } = require("../helpers/auth");
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.get("/test", test);
+//app.get("/test", test);
 app.post("/register", registerUser);
 app.post("/login", loginUser);
 app.post("/logout", logout);
@@ -127,5 +133,82 @@ describe("Auth Controller", () => {
     const response = await request(app).get("/profile");
     expect(response.status).toBe(200);
     expect(response.body).toBeNull();
+  });
+
+  describe('createLog', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return 400 if habitId is missing', async () => {
+      const req = { params: {}, body: { duration: 30 } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      await createLog(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Habit name is required.' });
+    });
+
+    it('should return 400 if duration is missing', async () => {
+      const req = { params: { habitId: 'abc123' }, body: {} };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      await createLog(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Duration must be specified' });
+    });
+
+    it('should return 404 if habit is not found', async () => {
+      HabitModel.findById.mockResolvedValue(null);
+      const req = { params: { habitId: 'abc123' }, body: { duration: 30 } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      await createLog(req, res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Habit not found' });
+    });
+
+    it('should return 200 and create log if habit is found', async () => {
+      const mockHabit = {
+        logs: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+      HabitModel.findById.mockResolvedValue(mockHabit);
+
+      const req = { params: { habitId: 'abc123' }, body: { duration: 45 } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      await createLog(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Log created successfully',
+        log: expect.objectContaining({ duration: 45 }),
+      }));
+    });
+
+    it('should return 500 if there is a server error', async () => {
+      HabitModel.findById.mockRejectedValue(new Error('DB Error'));
+      const req = { params: { habitId: 'abc123' }, body: { duration: 30 } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      await createLog(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Error creating log.' });
+    });
   });
 });

@@ -168,6 +168,47 @@ const getCuratedHabits = async (req, res) => {
   }
 };
 
+
+// Creates a log for the user
+const createLog = async (req, res) => {
+  try {
+    const { duration } = req.body;
+    const { habitId } = req.params;
+    
+    // Check all fields
+    if (!habitId) {
+      return res.status(400).json( {error: 'Habit name is required.' });
+    }
+    if (duration == null) {
+      return res.status(400).json( {error: 'Duration must be specified' });
+    }
+
+    // Attempt to find the user and habit 
+    const habit = await HabitModel.findById(habitId);
+    if (!habit) {
+      return res.status(404).json( {error: 'Habit not found'});
+    }
+
+    const newLog = {
+      date: new Date(),
+      duration: duration
+    }
+
+    habit.logs.push(newLog);
+    await habit.save();
+
+    return res.status(200).json({ message: 'Log created successfully', log: newLog });
+
+  } catch(error) {
+    console.error("Internal server error.");
+    return res.status(500).json({ error: 'Error creating log.'});
+
+  }
+}
+
+// Grabs the list of logs for a user given a specific time frame
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -175,5 +216,6 @@ module.exports = {
   getProfile,
   getHabits,
   createHabit,
-  getCuratedHabits
+  getCuratedHabits,
+  createLog
 };
