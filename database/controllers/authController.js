@@ -157,7 +157,6 @@ const createHabit = async (req, res) => {
   }
 };
 
-// Get curated habits endpoint
 const getCuratedHabits = async (req, res) => {
   try {
     const curatedHabits = await CuratedHabitModel.find();
@@ -168,6 +167,138 @@ const getCuratedHabits = async (req, res) => {
   }
 };
 
+const updateHabit = async (req, res) => {
+  try {
+    const { habitId } = req.params;
+    // Only allow these fields to be updated
+    const allowedFields = [
+      "name", "icon", "description", "minTime", "maxTime",
+      "timeBlock", "visibility", "start", "end", "recurrence"
+    ];
+    const updateData = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    // Check that the habit belongs to the user
+    const habit = await HabitModel.findById(habitId);
+    if (!habit || habit.userId.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    const updatedHabit = await HabitModel.findByIdAndUpdate(
+      habitId,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedHabit) {
+      return res.status(404).json({ error: 'Habit not found' });
+    }
+
+    return res.json(updatedHabit);
+  } catch (error) {
+    console.error('Error updating habit:', error);
+    return res.status(500).json({ error: 'Server error while updating habit' });
+  }
+};
+
+const deleteHabit = async (req, res) => {
+  try {
+    const { habitId } = req.params;
+
+    const deletedHabit = await HabitModel.findByIdAndDelete(habitId);
+
+    if (!deletedHabit) {
+      return res.status(404).json({ error: 'Habit not found' });
+    }
+
+    return res.json({ message: 'Habit deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting habit:', error);
+    return res.status(500).json({ error: 'Server error while deleting habit' });
+  }
+};
+
+// Creates a log for the user
+const createLog = async (req, res) => {
+  try {
+    const { duration } = req.body;
+    const { habitID } = req.params;
+    
+    // Check all fields
+    if (!habitID) {
+      return res.status(400).json( {error: 'Habit name is required.' });
+    }
+    if (duration == null) {
+      return res.status(400).json( {error: 'Duration must be specified' });
+    }
+
+    // Attempt to find the user and habit 
+    const habit = await HabitModel.findById(habitID);
+    if (!habit) {
+      return res.status(404).json( {error: 'Habit not found' });
+    }
+
+    const newLog = {
+      date: new Date(),
+      duration: duration
+    }
+
+    habit.logs.push(newLog);
+    await habit.save();
+
+    return res.status(200).json({ message: 'Log created successfully', log: newLog });
+
+  } catch(error) {
+    console.error("Internal server error.");
+    return res.status(500).json({ error: 'Error creating log.'});
+
+  }
+}
+
+// Grabs the list of logs for a user given a specific time frame
+const getLogs = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+    const { habitID } = req.params;
+
+    if (!habitID) {
+      return res.status(404).json( {error: 'Habit not found' });
+    }
+    if (!startDate || isNaN(Date.parse(startDate))){
+      return res.status(400).json({ error: 'Start date is required and must be a valid date' });
+    }
+    if (!endDate || isNaN(Date.parse(endDate))){
+      return res.status(400).json({ error: 'End date is required and must be a valid date.'})
+    }
+
+    const habit = await HabitModel.findById(habitID);
+    if (!habit) {
+      return res.status(404).json( {error: 'Habit not found' })
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const filteredLogs = habit.logs.filter(log => {
+      const logDate = new Date(log.date);
+      return logDate >= start && logDate <= end;
+    });
+
+    return res.status(200).json({ 
+      habitID: habitID,
+      logs: filteredLogs
+    });
+
+  } catch(error){
+    console.error("Internal server error.");
+    return res.status(500).json({ error: 'Error getting logs.' })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -175,5 +306,9 @@ module.exports = {
   getProfile,
   getHabits,
   createHabit,
-  getCuratedHabits
+  updateHabit,
+  deleteHabit,
+  getCuratedHabits,
+  createLog,
+  getLogs
 };
