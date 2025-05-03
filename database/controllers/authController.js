@@ -157,7 +157,6 @@ const createHabit = async (req, res) => {
   }
 };
 
-// Get curated habits endpoint
 const getCuratedHabits = async (req, res) => {
   try {
     const curatedHabits = await CuratedHabitModel.find();
@@ -165,6 +164,61 @@ const getCuratedHabits = async (req, res) => {
   } catch (error) {
     console.error('Error fetching curated habits:', error);
     return res.status(500).json({ error: 'Error fetching curated habits' });
+  }
+};
+
+const updateHabit = async (req, res) => {
+  try {
+    const { habitId } = req.params;
+    // Only allow these fields to be updated
+    const allowedFields = [
+      "name", "icon", "description", "minTime", "maxTime",
+      "timeBlock", "visibility", "start", "end", "recurrence"
+    ];
+    const updateData = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    // Check that the habit belongs to the user
+    const habit = await HabitModel.findById(habitId);
+    if (!habit || habit.userId.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    const updatedHabit = await HabitModel.findByIdAndUpdate(
+      habitId,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedHabit) {
+      return res.status(404).json({ error: 'Habit not found' });
+    }
+
+    return res.json(updatedHabit);
+  } catch (error) {
+    console.error('Error updating habit:', error);
+    return res.status(500).json({ error: 'Server error while updating habit' });
+  }
+};
+
+const deleteHabit = async (req, res) => {
+  try {
+    const { habitId } = req.params;
+
+    const deletedHabit = await HabitModel.findByIdAndDelete(habitId);
+
+    if (!deletedHabit) {
+      return res.status(404).json({ error: 'Habit not found' });
+    }
+
+    return res.json({ message: 'Habit deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting habit:', error);
+    return res.status(500).json({ error: 'Server error while deleting habit' });
   }
 };
 
@@ -252,6 +306,8 @@ module.exports = {
   getProfile,
   getHabits,
   createHabit,
+  updateHabit,
+  deleteHabit,
   getCuratedHabits,
   createLog,
   getLogs
