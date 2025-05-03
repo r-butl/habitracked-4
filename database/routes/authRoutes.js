@@ -35,7 +35,7 @@ router.post('/habits/create', createHabit);
 router.post('/habits/:habitId/createLog', createLog);
 router.get('/habits/:habitId/getLogs', getLogs);
 router.delete('/habits/:habitId/deleteHabit', deleteHabit);
-router.put('/habits/:habitId/updateHabit', updateHabit);
+router.patch('/habits/:habitId/updateHabit', updateHabit);
 
 module.exports = router;
          

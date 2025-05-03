@@ -41,7 +41,7 @@ app.post('/habits/create', createHabit);
 app.post('/habits/:habitId/createLog', createLog);
 app.get('/habits/:habitId/getLogs', getLogs);
 app.delete('/habits/:habitId/deleteHabit', deleteHabit);
-app.put('/habits/:habitId/updateHabit', updateHabit);
+app.patch('/habits/:habitId/updateHabit', updateHabit);
 
 describe("Backend Tests", () => {
   afterEach(() => {
