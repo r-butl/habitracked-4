@@ -214,10 +214,10 @@ const getLogs = async (req, res) => {
     if (!habitID) {
       return res.status(404).json( {error: 'Habit not found' });
     }
-    if (!startDate || isNaN(Date.parser(startDate))){
+    if (!startDate || isNaN(Date.parse(startDate))){
       return res.status(400).json({ error: 'Start date is required and must be a valid date' });
     }
-    if (!endDate || isNaN(Date.parser(endDate))){
+    if (!endDate || isNaN(Date.parse(endDate))){
       return res.status(400).json({ error: 'End date is required and must be a valid date.'})
     }
 
@@ -240,7 +240,7 @@ const getLogs = async (req, res) => {
     });
 
   } catch(error){
-    console.error("Internal service error.");
+    console.error("Internal server error.");
     return res.status(500).json({ error: 'Error getting logs.' })
   }
 }
