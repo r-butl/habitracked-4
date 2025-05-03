@@ -33,10 +33,9 @@ router.get('/habits', getHabits);
 router.get('/curatedHabits', getCuratedHabits);
 router.post('/habits/create', createHabit);
 router.post('/habits/:habitId/createLog', createLog);
-router.get('/habits/:habitId/getlogs', getLogs);
+router.get('/habits/:habitId/getLogs', getLogs);
 router.delete('/habits/:habitId/deleteHabit', deleteHabit);
-router.delete('/habits/:habitId/updateHabit', updateHabit);
-
+router.put('/habits/:habitId/updateHabit', updateHabit);
 
 module.exports = router;
          

@@ -226,10 +226,10 @@ const deleteHabit = async (req, res) => {
 const createLog = async (req, res) => {
   try {
     const { duration } = req.body;
-    const { habitID } = req.params;
-    
+    const { habitId } = req.params;
+  
     // Check all fields
-    if (!habitID) {
+    if (!habitId) {
       return res.status(400).json( {error: 'Habit name is required.' });
     }
     if (duration == null) {
@@ -237,7 +237,7 @@ const createLog = async (req, res) => {
     }
 
     // Attempt to find the user and habit 
-    const habit = await HabitModel.findById(habitID);
+    const habit = await HabitModel.findById(habitId);
     if (!habit) {
       return res.status(404).json( {error: 'Habit not found' });
     }
@@ -262,11 +262,11 @@ const createLog = async (req, res) => {
 // Grabs the list of logs for a user given a specific time frame
 const getLogs = async (req, res) => {
   try {
-    const { startDate, endDate } = req.body;
-    const { habitID } = req.params;
+    const { startDate, endDate } = req.query;
+    const { habitId } = req.params;
 
-    if (!habitID) {
-      return res.status(404).json( {error: 'Habit not found' });
+    if (!habitId) {
+      return res.status(404).json( {error: 'Habit ID not present' });
     }
     if (!startDate || isNaN(Date.parse(startDate))){
       return res.status(400).json({ error: 'Start date is required and must be a valid date' });
@@ -275,7 +275,7 @@ const getLogs = async (req, res) => {
       return res.status(400).json({ error: 'End date is required and must be a valid date.'})
     }
 
-    const habit = await HabitModel.findById(habitID);
+    const habit = await HabitModel.findById(habitId);
     if (!habit) {
       return res.status(404).json( {error: 'Habit not found' })
     }
@@ -289,7 +289,7 @@ const getLogs = async (req, res) => {
     });
 
     return res.status(200).json({ 
-      habitID: habitID,
+      habitId: habitId,
       logs: filteredLogs
     });
 
