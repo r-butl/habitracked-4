@@ -2,7 +2,7 @@
 const request = require("supertest");
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const {  registerUser, loginUser, logout, getProfile, createHabit, updateHabit, deleteHabit, createLog, getLogs } = require("../controllers/authController");
+const {  registerUser, loginUser, logout, getProfile, getHabits, getCuratedHabits, createHabit, updateHabit, deleteHabit, createLog, getLogs } = require("../controllers/authController");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 
@@ -30,11 +30,18 @@ const { hashPassword, comparePassword } = require("../helpers/auth");
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.get("/");
+app.get("/profile", getProfile);
 app.post("/register", registerUser);
 app.post("/login", loginUser);
-app.post("/logout", logout);
-app.get("/profile", getProfile);
-app.get("")
+app.post('/logout', logout);
+app.get('/habits', getHabits);
+app.get('/curatedHabits', getCuratedHabits);
+app.post('/habits/create', createHabit);
+app.post('/habits/:habitId/createLog', createLog);
+app.get('/habits/:habitId/getLogs', getLogs);
+app.delete('/habits/:habitId/deleteHabit', deleteHabit);
+app.patch('/habits/:habitId/updateHabit', updateHabit);
 
 describe("Backend Tests", () => {
   afterEach(() => {
@@ -374,7 +381,7 @@ describe("Backend Tests", () => {
     });
 
     it('should return 400 if duration is missing', async () => {
-      const req = { params: { habitID: 'abc123' }, body: {} };
+      const req = { params: { habitId: 'abc123' }, body: {} };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
@@ -387,7 +394,7 @@ describe("Backend Tests", () => {
 
     it('should return 404 if habit is not found', async () => {
       HabitModel.findById.mockResolvedValue(null);
-      const req = { params: { habitID: 'abc123' }, body: { duration: 30 } };
+      const req = { params: { habitId: 'abc123' }, body: { duration: 30 } };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
@@ -405,7 +412,7 @@ describe("Backend Tests", () => {
       };
       HabitModel.findById.mockResolvedValue(mockHabit);
 
-      const req = { params: { habitID: 'abc123' }, body: { duration: 45 } };
+      const req = { params: { habitId: 'abc123' }, body: { duration: 45 } };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
@@ -421,7 +428,7 @@ describe("Backend Tests", () => {
 
     it('should return 500 if there is a server error', async () => {
       HabitModel.findById.mockRejectedValue(new Error('DB Error'));
-      const req = { params: { habitID: 'abc123' }, body: { duration: 30 } };
+      const req = { params: { habitId: 'abc123' }, body: { duration: 30 } };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
@@ -445,8 +452,8 @@ describe("Backend Tests", () => {
   
     it('should return 400 if startDate is invalid', async () => {
       const req = {
-        params: { habitID: 'abc123' },
-        body: { startDate: 'invalid-date', endDate: '2024-01-01' }
+        params: { habitId: 'abc123' },
+        query: { startDate: 'invalid-date', endDate: '2024-01-01' }
       };
   
       await getLogs(req, res);
@@ -458,8 +465,8 @@ describe("Backend Tests", () => {
   
     it('should return 400 if endDate is invalid', async () => {
       const req = {
-        params: { habitID: 'abc123' },
-        body: { startDate: '2024-01-01', endDate: 'invalid-date' }
+        params: { habitId: 'abc123' },
+        query: { startDate: '2024-01-01', endDate: 'invalid-date' }
       };
   
       await getLogs(req, res);
@@ -470,18 +477,18 @@ describe("Backend Tests", () => {
     });
   
     it('should return 404 if habitID is missing', async () => {
-      const req = { params: {}, body: { startDate: '2024-01-01', endDate: '2024-01-02' } };
+      const req = { params: {}, query: { startDate: '2024-01-01', endDate: '2024-01-02' } };
   
       await getLogs(req, res);
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Habit not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Habit ID not present' });
     });
   
     it('should return 404 if habit not found in DB', async () => {
       HabitModel.findById.mockResolvedValue(null);
       const req = {
-        params: { habitID: 'abc123' },
-        body: { startDate: '2024-01-01', endDate: '2024-01-02' }
+        params: { habitId: 'abc123' },
+        query: { startDate: '2024-01-01', endDate: '2024-01-02' }
       };
   
       await getLogs(req, res);
@@ -498,14 +505,14 @@ describe("Backend Tests", () => {
       HabitModel.findById.mockResolvedValue({ logs: mockLogs });
   
       const req = {
-        params: { habitID: 'abc123' },
-        body: { startDate: '2024-01-02', endDate: '2024-01-08' }
+        params: { habitId: 'abc123' },
+        query: { startDate: '2024-01-02', endDate: '2024-01-08' }
       };
   
       await getLogs(req, res);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        habitID: 'abc123',
+        habitId: 'abc123',
         logs: [mockLogs[1]]
       });
     });
@@ -514,8 +521,8 @@ describe("Backend Tests", () => {
       HabitModel.findById.mockRejectedValue(new Error('DB failure'));
   
       const req = {
-        params: { habitID: 'abc123' },
-        body: { startDate: '2024-01-01', endDate: '2024-01-10' }
+        params: { habitId: 'abc123' },
+        query: { startDate: '2024-01-01', endDate: '2024-01-10' }
       };
   
       await getLogs(req, res);
