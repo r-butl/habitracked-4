@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Popup } from '../components/Popup/Popup';
 
 export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
     const [timeBlock, setTimeBlock] = useState(habit.timeBlock || "morning");
@@ -13,30 +14,43 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
         saturday: false,
         sunday: false,
     });
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState("");
 
     const toggleDay = (day) => {
         setRecurrence((prev) => ({ ...prev, [day]: !prev[day] }));
     };
 
+    const showError = (message) => {
+        setPopupMessage(message);
+        setShowPopup(true);
+    };
     const handleSubmit = () => {
         const selectedDays = Object.keys(recurrence).filter((day) => recurrence[day]);
-        
-        if (!timeBlock || !start || !end) {
-            alert("Please complete all fields.");
+        if (!timeBlock || !start || !end ) {
+            showError("Please fill in all required fields.");
             return;
         }
-        
-        const habitData = {
-            ...habit,
-            timeBlock,
-            minTime: parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0)),
-            maxTime: parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)),
-            start: new Date(start).toISOString(),
-            end: new Date(end).toISOString(),
-            recurrence: selectedDays, // pass array for new recurrence structure
-        };
-        
-        onSubmit(habitData);
+        else if (selectedDays.length === 0){
+            showError("Select at least one recurrence day.");
+            return;
+        }
+        else if (parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)) < parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0))) {
+            showError("End time should be greater than start time.");
+            return;
+        }
+        else{
+            const habitData = {
+                ...habit,
+                timeBlock,
+                minTime: parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0)),
+                maxTime: parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)),
+                start: new Date(start).toISOString(),
+                end: new Date(end).toISOString(),
+                recurrence: selectedDays, // pass array for new recurrence structure
+            };
+            onSubmit(habitData);
+        }
     };
 
     return (
@@ -93,6 +107,13 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
                     </div>
                 </div>
             </div>
+            {showPopup && (
+                <Popup 
+                    isVisible={showPopup} 
+                    message={popupMessage} 
+                    onClose={() => setShowPopup(false)} 
+                />
+            )}
         </div>
     );
 }
