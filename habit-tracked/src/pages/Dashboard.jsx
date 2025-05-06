@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { UserContext } from '../context/userContext';
+import { LogHistoryGraph } from '../components/LogHistoryGraph/LogHistoryGraph';
 
 export default function Dashboard() {
   const { user } = useContext(UserContext);
@@ -12,6 +13,7 @@ export default function Dashboard() {
           <h2 className="text-secondary fs-4">Hi, {user.name}! 👋</h2>
         )}
       </div>
+      <LogHistoryGraph />
     </div>
   );
 }
