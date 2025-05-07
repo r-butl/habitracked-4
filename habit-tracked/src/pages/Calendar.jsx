@@ -10,8 +10,7 @@ import { Popup } from '../components/Popup/Popup';
 // import { ConfigureHabitDialog } from './ConfigureHabitDialog';
 
 export default function Calendar() {
-  const { user } = useContext(UserContext);
-  const [loading, setLoading] = useState(true);
+  const { user } = useContext(UserContext)
   const [showChooseHabit, setShowChooseHabit] = useState(false);
   const [showCustomHabitForm, setShowCustomHabitForm] = useState(false);
   const [habits, setHabits] = useState([]);
@@ -23,9 +22,7 @@ export default function Calendar() {
 
   useEffect(() => {
     const fetchHabits = async () => {
-      if (!user || !user.id) {
-        setLoading(false);
-      }
+      if (!user || !user.id) return;
 
       try {
         const data = await getUserHabits(user.id);
@@ -168,21 +165,13 @@ export default function Calendar() {
     calendarRef.current.control.update();
   };
 
-  if (loading) {
-    return (
-      <div className="text-center mt-5">
-        <p className="text-muted">Loading...</p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="text-center mt-5">
-        <p className="text-danger">User not logged in. Redirecting...</p>
-      </div>
-    );
-  }
+  // if (!user) {
+  //   return (
+  //     <div className="text-center mt-5">
+  //       <p className="text-danger">User not logged in. Redirecting...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="bg-light min-vh-100">

@@ -41,4 +41,10 @@ export const getUserHabits = async (userId) => {
 export const getCuratedHabits = async() => {
     const response = await api.get('/curatedHabits');
     return await response.data;
-  };
+};
+
+export const getLogs = async (habitId, startDate, endDate) => {
+
+    const response = await api.get(`/habits/${habitId}/getLogs`, { startDate, endDate });
+    return response.data;
+};
