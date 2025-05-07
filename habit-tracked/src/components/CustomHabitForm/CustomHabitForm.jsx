@@ -1,5 +1,6 @@
 import { useState } from "react";
 import './CustomHabitForm.css'; // Import the CSS file
+import { Popup } from "../Popup/Popup";
 
 export const CustomHabitForm = ({ onSubmit }) => {
   // State for form fields
@@ -21,6 +22,13 @@ export const CustomHabitForm = ({ onSubmit }) => {
   });
   const [start, setStart] = useState(new Date());
   const [end, setEnd] = useState(new Date());
+  const [showPopup, setShowPopup] = useState(false); // State to control the popup visibility
+  const [popupMessage, setPopupMessage] = useState(""); // Message for the popup
+
+  const showError = (message) => {
+    setPopupMessage(message);
+    setShowPopup(true);
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -38,21 +46,39 @@ export const CustomHabitForm = ({ onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const newHabit = {
-      name,
-      icon,
-      description,
-      minTime: parseInt(minTime),
-      maxTime: parseInt(maxTime),
-      timeBlock,
-      visibility,
-      recurrence: Object.keys(recurrence).filter((day) => recurrence[day]) || [], // now expects array of strings
-      start: new Date(start).toISOString(),
-      end: new Date(end).toISOString(),
-    };
-
-    onSubmit(newHabit); // Send the new habit back to parent component
+    const selectedDays = Object.keys(recurrence).filter(day => recurrence[day]);
+    // Basic validation for every field
+    if (!name.trim() || !description.trim() || !minTime || !maxTime){
+      showError("Please fill in all required fields.");
+      return;
+    } 
+    else if (parseInt(minTime) < 1){
+      showError("Min Time should be atleast 1 min.");
+      return;
+    }
+    else if (parseInt(maxTime) < parseInt(minTime)) {
+      showError("Max Time should be greater than or equal to Min Time.");
+      return;
+    }
+    else if (new Date(start) >= new Date(end)){
+      showError("Start date should be before end date.");
+      return;
+    } 
+    else {
+      const newHabit = {
+        name,
+        icon,
+        description,
+        minTime: parseInt(minTime),
+        maxTime: parseInt(maxTime),
+        timeBlock,
+        visibility,
+        recurrence: Object.keys(recurrence).filter((day) => recurrence[day]) || [], // now expects array of strings
+        start: new Date(start).toISOString(),
+        end: new Date(end).toISOString(),
+      };
+      onSubmit(newHabit); // Send the new habit back to parent component
+    }
   };
 
   return (
@@ -62,28 +88,28 @@ export const CustomHabitForm = ({ onSubmit }) => {
 
         <input 
           type="text" 
-          placeholder="Habit name" 
+          placeholder="Habit name*" 
           value={name} 
           onChange={(e) => setName(e.target.value)} 
         />
         
         <input 
           type="text" 
-          placeholder="Description" 
+          placeholder="Description*" 
           value={description} 
           onChange={(e) => setDescription(e.target.value)} 
         />
         
         <input 
           type="number" 
-          placeholder="Min Time (min)" 
+          placeholder="Min Time (min)*" 
           value={minTime} 
           onChange={(e) => setMinTime(e.target.value)} 
         />
         
         <input 
           type="number" 
-          placeholder="Max Time (min)" 
+          placeholder="Max Time (min)*" 
           value={maxTime} 
           onChange={(e) => setMaxTime(e.target.value)} 
         />
@@ -147,6 +173,13 @@ export const CustomHabitForm = ({ onSubmit }) => {
 
         <button type="submit">Save Habit</button>
       </form>
+      {showPopup && (
+        <Popup 
+          isVisible={showPopup} 
+          message={popupMessage} 
+          onClose={() => setShowPopup(false)} 
+        />
+      )}
     </div>
   );
 };
