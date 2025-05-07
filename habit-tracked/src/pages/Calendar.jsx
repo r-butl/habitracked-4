@@ -2,10 +2,12 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import { UserContext } from '../context/userContext';
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-react";
 import { CreateHabitButton } from '../components/CreateHabitButton/CreateHabitButton';
+import { EditHabitButton } from '../components/EditHabitButton/EditHabitButton';
 import { ChooseHabitType } from '../components/ChooseHabitType/ChooseHabitType';
 import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm';
 import { getUserHabits, createHabit } from '../utils/api';
 import { CuratedHabitsDialog } from './CuratedHabitsDialog';
+import { UserHabitsDialog } from './UserHabitsDialog';
 import { Popup } from '../components/Popup/Popup';
 // import { ConfigureHabitDialog } from './ConfigureHabitDialog';
 
@@ -13,6 +15,7 @@ export default function Calendar() {
   const { user } = useContext(UserContext);
   const [showChooseHabit, setShowChooseHabit] = useState(false);
   const [showCustomHabitForm, setShowCustomHabitForm] = useState(false);
+  const [showUserHabits, setUserHabits] = useState(false);
   const [habits, setHabits] = useState([]);
   const calendarRef = useRef(null);
   const [showCuratedDialog, setShowCuratedDialog] = useState(false);
@@ -36,6 +39,10 @@ export default function Calendar() {
 
   const onCreateClick = () => {
     setShowChooseHabit(true);
+  };
+
+  const onEditClick = () => {
+    setUserHabits(true);
   };
 
   const onCreateCustomHabit = (newHabitData) => {
@@ -178,22 +185,34 @@ export default function Calendar() {
       <div className="container bg-light mt-0">
         <h1 className="text-center fs-2">{user.name}'s Calendar</h1>
 
-        <div>
-          <CreateHabitButton onClick={onCreateClick} />
-          {showChooseHabit && (
-            <ChooseHabitType
-              show={showChooseHabit}
-              onClose={() => setShowChooseHabit(false)}
-              onSelectList={() => {
-                setShowChooseHabit(false);
-                setShowCuratedDialog(true);
-              }}
-              onCreateCustomHabit={() => {
-                setShowChooseHabit(false);
-                setShowCustomHabitForm(true);
-              }}
-            />
-          )}
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <div>
+            <CreateHabitButton onClick={onCreateClick} />
+            {showChooseHabit && (
+              <ChooseHabitType
+                show={showChooseHabit}
+                onClose={() => setShowChooseHabit(false)}
+                onSelectList={() => {
+                  setShowChooseHabit(false);
+                  setShowCuratedDialog(true);
+                }}
+                onCreateCustomHabit={() => {
+                  setShowChooseHabit(false);
+                  setShowCustomHabitForm(true);
+                }}
+              />
+            )}
+          </div>
+
+          <div>
+            <EditHabitButton onClick={onEditClick} />
+            {showUserHabits && (
+              <UserHabitsDialog
+                show={showUserHabits}
+                onClose={() => setUserHabits(false)}
+              />
+            )}
+          </div>
         </div>
 
         {showCuratedDialog && (
