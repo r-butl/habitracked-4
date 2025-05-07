@@ -60,10 +60,6 @@ export const CustomHabitForm = ({ onSubmit }) => {
       showError("Max Time should be greater than or equal to Min Time.");
       return;
     }
-    else if (selectedDays.length === 0){
-      showError("Select at least one recurrence day.");
-      return;
-    }
     else if (new Date(start) >= new Date(end)){
       showError("Start date should be before end date.");
       return;

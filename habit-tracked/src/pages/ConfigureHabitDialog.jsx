@@ -31,11 +31,7 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
             showError("Please fill in all required fields.");
             return;
         }
-        else if (selectedDays.length === 0){
-            showError("Select at least one recurrence day.");
-            return;
-        }
-        else if (parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)) < parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0))) {
+        else if (parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)) <= parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0))) {
             showError("End time should be greater than start time.");
             return;
         }
