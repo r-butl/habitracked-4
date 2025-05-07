@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+const logSchema = new Schema({
+  date: { type: Date, required: true},
+  duration: { type: Number, required: true},
+});
+
 // Shared Habit model (all users' habits go here)
 const habitSchema = new Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -17,6 +22,7 @@ const habitSchema = new Schema({
   visibility: { type: Number, required: true },
   start: { type: Date, required: true },
   end: { type: Date, required: true },
+  logs: { type: [logSchema]},
   recurrence: {
     type: [String], // Array of strings
     enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
@@ -48,6 +54,7 @@ const curatedHabitSchema = new Schema({
 
 const HabitModel = mongoose.model('Habit', habitSchema);
 const CuratedHabitModel = mongoose.model('CuratedHabit', curatedHabitSchema, 'curatedHabits');
+const LogModel = mongoose.model('Log', logSchema);
 
 module.exports = {
   HabitModel,
