@@ -11,6 +11,7 @@ import { Popup } from '../components/Popup/Popup';
 
 export default function Calendar() {
   const { user } = useContext(UserContext);
+  const [loading, setLoading] = useState(true);
   const [showChooseHabit, setShowChooseHabit] = useState(false);
   const [showCustomHabitForm, setShowCustomHabitForm] = useState(false);
   const [habits, setHabits] = useState([]);
@@ -22,7 +23,9 @@ export default function Calendar() {
 
   useEffect(() => {
     const fetchHabits = async () => {
-      if (!user || !user.id) return;
+      if (!user || !user.id) {
+        setLoading(false);
+      }
 
       try {
         const data = await getUserHabits(user.id);
@@ -165,6 +168,14 @@ export default function Calendar() {
     calendarRef.current.control.update();
   };
 
+  if (loading) {
+    return (
+      <div className="text-center mt-5">
+        <p className="text-muted">Loading...</p>
+      </div>
+    )
+  }
+
   if (!user) {
     return (
       <div className="text-center mt-5">
@@ -175,8 +186,14 @@ export default function Calendar() {
 
   return (
     <div className="bg-light min-vh-100">
-      <div className="container bg-light mt-0">
-        <h1 className="text-center fs-2">{user.name}'s Calendar</h1>
+      <div className="container d-flex flex-column align-items-center justify-content-center min-vh-100">
+
+        <div className="card shadow-lg p-4 text-center mb-4" style={{ maxWidth: "500px", width: "100%", height: "150px", marginTop: "40px" }}>
+          <h1 className="text-primary mb-3">Calendar</h1>
+          {!!user && (
+            <h2 className="text-secondary fs-4">Hi, {user.name}! 👋</h2>
+          )}
+        </div>
 
         <div>
           <CreateHabitButton onClick={onCreateClick} />
