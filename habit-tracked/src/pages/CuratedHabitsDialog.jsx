@@ -74,6 +74,7 @@ export function CuratedHabitsDialog({ show, onClose, onSelect }) {
             </div>
           </div>
         </div>
+        
       </div>
 
       {/* Configurator Modal */}

@@ -33,6 +33,11 @@ export const createHabit = async (userId, habitData) => {
     return response.data;
   };
 
+export const deleteHabit = async (habitId) => {
+    const response = await api.delete(`/habits/${habitId}/deleteHabit`);
+    return response.data;
+  };
+
 export const getUserHabits = async (userId) => {
     const response = await api.get(`/habits?userId=${userId}`);
     return response.data;
