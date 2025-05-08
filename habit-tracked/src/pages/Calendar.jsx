@@ -21,6 +21,7 @@ export default function Calendar() {
   const [showCuratedDialog, setShowCuratedDialog] = useState(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const [habitToEdit, setHabitToEdit] = useState(null);
   // const [habitToConfigure, setHabitToConfigure] = useState(null);
 
   useEffect(() => {
@@ -47,10 +48,10 @@ export default function Calendar() {
 
   const onCreateCustomHabit = (newHabitData) => {
     setShowChooseHabit(false);
-  
+
     const startLocal = new Date(newHabitData.start);
     const endLocal = new Date(newHabitData.end);
-  
+
     const newHabit = {
       name: newHabitData.name,
       icon: newHabitData.icon,
@@ -63,7 +64,7 @@ export default function Calendar() {
       end: endLocal.toISOString(),
       recurrence: newHabitData.recurrence,
     };
-  
+
     createHabit(user.id, newHabit)
       .then((createdHabit) => {
         setHabits((prev) => [...prev, createdHabit]);
@@ -84,12 +85,12 @@ export default function Calendar() {
   // It takes into account the start and end times of the habit.
   const generateRecurringEvents = (habit, rangeStart, rangeEnd) => {
     const result = [];
-  
+
     if (!Array.isArray(habit.recurrence) || habit.recurrence.length === 0) {
       result.push(habit);
       return result;
     }
-  
+
     const dayMap = {
       sunday: 0,
       monday: 1,
@@ -99,37 +100,37 @@ export default function Calendar() {
       friday: 5,
       saturday: 6
     };
-  
+
     const habitStart = new Date(habit.start);
     const habitEnd = new Date(habit.end);
     const duration = habitEnd.getTime() - habitStart.getTime();
-  
+
     const startHour = habitStart.getHours();
     const startMinute = habitStart.getMinutes();
-  
+
     const current = new Date(rangeStart);
     while (current <= rangeEnd) {
       const localDay = current.getDay(); // 0 = Sunday
       const dayName = Object.keys(dayMap).find(day => dayMap[day] === localDay);
-  
+
       if (habit.recurrence.includes(dayName)) {
         const start = new Date(current);
         start.setHours(startHour, startMinute, 0, 0); // Set time from original habit
-  
+
         const end = new Date(start.getTime() + duration);
-  
+
         result.push({
           ...habit,
           start,
           end
         });
       }
-  
+
       current.setDate(current.getDate() + 1);
     }
-  
+
     return result;
-  };  
+  };
 
   const rangeStart = new Date(); // today
   const rangeEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // one week
@@ -208,7 +209,16 @@ export default function Calendar() {
               <UserHabitsDialog
                 show={showUserHabits}
                 onClose={() => setUserHabits(false)}
+                onEditHabit={(habit) => {
+                  setHabitToEdit(habit);
+                  setUserHabits(false);
+                  setShowCustomHabitForm(true);
+                }}
               />
+              // <UserHabitsDialog
+              //   show={showUserHabits}
+              //   onClose={() => setUserHabits(false)}
+              // />
             )}
           </div>
         </div>
@@ -226,14 +236,26 @@ export default function Calendar() {
             }}
           />
         )}
-
         {showCustomHabitForm && (
           <CustomHabitForm
             show={showCustomHabitForm}
-            onHide={() => setShowCustomHabitForm(false)}
-            onSubmit={(newHabitData) => {
-              onCreateCustomHabit(newHabitData);
+            initialHabit={habitToEdit}
+            onHide={() => {
               setShowCustomHabitForm(false);
+              setHabitToEdit(null);
+            }}
+            onSubmit={(habitData) => {
+              if (habitToEdit) {
+                setHabits((prev) =>
+                  prev.map((h) =>
+                    h._id === habitData.id || h.id === habitData.id ? habitData : h
+                  )
+                );
+              } else {
+                onCreateCustomHabit(habitData);
+              }
+              setShowCustomHabitForm(false);
+              setHabitToEdit(null);
             }}
           />
         )}

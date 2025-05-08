@@ -117,10 +117,11 @@ export function UserHabitsDialog({ show, onClose }) {
       {/* Edit Habit Modal */}
       {habitToEdit && (
         <CustomHabitForm
+          show={!!habitToEdit}
           initialHabit={habitToEdit}
           onSubmit={async (updatedHabit) => {
             try {
-              await updateHabit(habitToEdit._id, updatedHabit); // call api
+              await updateHabit(habitToEdit._id, updatedHabit);
               const data = await getUserHabits(user.id);
               setUserHabits(data);
               setPopupMessage("Habit updated successfully!");

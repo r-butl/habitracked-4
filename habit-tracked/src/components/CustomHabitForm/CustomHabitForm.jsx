@@ -46,7 +46,7 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide, show })
   };
 
   const handleSubmit = (e) => {
-    e?.preventDefault();
+    e.preventDefault();
     const selectedDays = Object.keys(recurrence).filter((day) => recurrence[day]);
 
     if (!name.trim() || !description.trim() || !minTime || !maxTime) {
@@ -85,12 +85,13 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide, show })
       <div className="modal show d-block" tabIndex="-1">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">{initialHabit ? "Edit Custom Habit" : "Create a Custom Habit"}</h5>
-              <button type="button" className="btn-close" onClick={onHide}></button>
-            </div>
-            <div className="modal-body">
-              <form>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-header">
+                <h5 className="modal-title">{initialHabit ? "Edit Custom Habit" : "Create a Custom Habit"}</h5>
+                <button type="button" className="btn-close" onClick={onHide}></button>
+              </div>
+
+              <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">Habit Name*</label>
                   <input
@@ -222,15 +223,17 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide, show })
                     </div>
                   </div>
                 )}
-              </form>
-            </div>
+              </div>
 
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={onHide}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleSubmit}>
-                {initialHabit ? "Update Habit" : "Save Habit"}
-              </button>
-            </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={onHide}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {initialHabit ? "Update Habit" : "Save Habit"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
