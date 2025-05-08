@@ -24,6 +24,8 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
   const [xlabel, setXLabel] = useState("Week");
   const { user } = useContext(UserContext);
   const [habits, setHabits] = useState([]);
+  const [selectedHabitId, setSelectedHabitId] = useState("all");
+  const [habitDialogOpen, setHabitDialogOpen] = useState(false);
 
   // Habit loading
   useEffect(() => {
@@ -42,57 +44,67 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
     };
 
     fetchHabits();
-    }, [user]);
+    }, [user, refreshSignal]);
 
-  // Generate data for the last 7 days
   const getFilteredLogData = async (mode) => {
-
-    let startDate
+    let startDate;
     const endDate = new Date();
-    if (mode === 'week'){
-        startDate = subDays(endDate, 7);
-    } else if (mode === 'month') {
-        startDate = subWeeks(endDate, 4);
-    } else if (mode === 'year') {
-        startDate = subMonths(endDate, 12)
-    }
-
+  
+    if (mode === "week") startDate = subDays(endDate, 7);
+    else if (mode === "month") startDate = subWeeks(endDate, 4);
+    else if (mode === "year") startDate = subMonths(endDate, 12);
+  
     const results = {};
-
-    habits.forEach(habit => {
-        console.log(habit.id);
-        if (!habit.logs || habit.logs.length === 0) return;
-
-        const allDates = [];
-        let cursor = new Date(startDate);
-        while (cursor <= endDate) {
-          allDates.push(new Date(cursor));
-          cursor.setDate(cursor.getDate() + 1);
-        }
-
-        const dateMap = {};
-        habit.logs
-          .map(log => ({ ...log, date: new Date(log.date) }))
-          .filter(log => log.date >= startDate && log.date <= endDate)
-          .forEach(log => {
-            const dateStr = format(log.date, 'yyyy-MM-dd');
-            dateMap[dateStr] = (dateMap[dateStr] || 0) + (log.duration || 1);
-          });
-
-        const dataPoints = allDates.map(date => {
-          const dateStr = format(date, 'yyyy-MM-dd');
-          return {
-            x: new Date(date),
-            y: dateMap[dateStr] || 0,
-          };
+    const allDates = [];
+    let cursor = new Date(startDate);
+    while (cursor <= endDate) {
+      allDates.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  
+    if (selectedHabitId === "all") {
+      const cumulativeMap = {};
+      habits.forEach((habit) => {
+        if (!habit.logs) return;
+        habit.logs.forEach((log) => {
+          const dateStr = format(new Date(log.date), "yyyy-MM-dd");
+          cumulativeMap[dateStr] = (cumulativeMap[dateStr] || 0) + log.duration;
         });
-
-        results[habit.id] = dataPoints;
-    }); 
-
-    console.log(results);
-    return results
+      });
+  
+      const cumulativePoints = allDates.map((date) => {
+        const dateStr = format(date, "yyyy-MM-dd");
+        return {
+          x: date,
+          y: cumulativeMap[dateStr] || 0,
+        };
+      });
+  
+      results["all"] = cumulativePoints;
+    } else {
+      const habit = habits.find((h) => h._id === selectedHabitId);
+      if (!habit?.logs) return {};
+  
+      const habitMap = {};
+      habit.logs.forEach((log) => {
+        const dateStr = format(new Date(log.date), "yyyy-MM-dd");
+        habitMap[dateStr] = (habitMap[dateStr] || 0) + log.duration;
+      });
+  
+      const habitPoints = allDates.map((date) => {
+        const dateStr = format(date, "yyyy-MM-dd");
+        return {
+          x: date,
+          y: habitMap[dateStr] || 0,
+        };
+      });
+  
+      results[habit._id] = habitPoints;
+    }
+  
+    return results;
   };
+  
 
   const datasets = {
     week: () => {
@@ -119,7 +131,7 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
       setData(result);
     };
     loadData();
-  }, [habits, selectedTimeframe, refreshSignal]);
+  }, [habits, selectedTimeframe, refreshSignal, selectedHabitId]);
 
   const handleSelectChange = (e) => {
     setSelectedTimeframe(e.target.value);
@@ -138,6 +150,23 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
         <option value="month">Month</option>
         <option value="year">Year</option>
       </select>
+      </div>
+      <div className="dropdown-container mt-2">
+        <label>Habit: </label>
+        <select
+          onChange={(e) => {
+            setSelectedHabitId(e.target.value);
+            setHabitDialogOpen(true);
+          }}
+          value={selectedHabitId}
+        >
+          <option value="all">All Habits</option>
+          {habits.map((habit) => (
+            <option key={habit._id} value={habit._id}>
+              {habit.name}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="log-history-graph">
         <VictoryChart
@@ -162,7 +191,7 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
             {/* Y-axis */}
             <VictoryAxis 
             dependentAxis 
-            label="hours"
+            label="minutes"
             style={{ 
                 tickLabels: tickLabelStyle,
                 axisLabel: axisLabelStyle

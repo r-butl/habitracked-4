@@ -9,7 +9,7 @@ export default function HabitCard({ habit, onLogCreated }) {
   const [popupMessage, setPopupMessage] = useState('');
 
   const handleLog = async () => {
-    if (!minutes || isNaN(minutes)) {
+    if (!minutes || isNaN(minutes) || parseInt(minutes) <= 0) {
         setPopupMessage("Please enter a valid number of minutes.");
         setShowPopup(true);
         return;
@@ -34,7 +34,6 @@ export default function HabitCard({ habit, onLogCreated }) {
   return (
     <div className="card mb-3 p-3 shadow-sm">
       <h6 className="mb-1 text-dark">{habit.name}</h6>
-      <p className="mb-2 text-muted">Goal: {habit.minutes} mins/day</p>
       <div className="d-flex gap-2">
         <input
           type="number"
