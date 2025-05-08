@@ -10,7 +10,7 @@ import { Popup } from '../components/Popup/Popup';
 // import { ConfigureHabitDialog } from './ConfigureHabitDialog';
 
 export default function Calendar() {
-  const { user } = useContext(UserContext);
+  const { user } = useContext(UserContext)
   const [showChooseHabit, setShowChooseHabit] = useState(false);
   const [showCustomHabitForm, setShowCustomHabitForm] = useState(false);
   const [habits, setHabits] = useState([]);
@@ -165,18 +165,24 @@ export default function Calendar() {
     calendarRef.current.control.update();
   };
 
-  if (!user) {
-    return (
-      <div className="text-center mt-5">
-        <p className="text-danger">User not logged in. Redirecting...</p>
-      </div>
-    );
-  }
+  // if (!user) {
+  //   return (
+  //     <div className="text-center mt-5">
+  //       <p className="text-danger">User not logged in. Redirecting...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="bg-light min-vh-100">
-      <div className="container bg-light mt-0">
-        <h1 className="text-center fs-2">{user.name}'s Calendar</h1>
+      <div className="container d-flex flex-column align-items-center justify-content-center min-vh-100">
+
+        <div className="card shadow-lg p-4 text-center mb-4" style={{ maxWidth: "500px", width: "100%", height: "150px", marginTop: "40px" }}>
+          <h1 className="text-primary mb-3">Calendar</h1>
+          {!!user && (
+            <h2 className="text-secondary fs-4">Hi, {user.name}! 👋</h2>
+          )}
+        </div>
 
         <div>
           <CreateHabitButton onClick={onCreateClick} />
