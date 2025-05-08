@@ -3,8 +3,8 @@ import { Popup } from '../components/Popup/Popup';
 
 export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
     const [timeBlock, setTimeBlock] = useState(habit.timeBlock || "morning");
-    const [start, setStart] = useState(new Date());
-    const [end, setEnd] = useState(new Date());
+    const [start, setStart] = useState(() => new Date().toISOString().slice(0, 16));
+    const [end, setEnd] = useState(() => new Date().toISOString().slice(0, 16));
     const [recurrence, setRecurrence] = useState({
         monday: false,
         tuesday: false,
@@ -25,29 +25,36 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
         setPopupMessage(message);
         setShowPopup(true);
     };
+
     const handleSubmit = () => {
         const selectedDays = Object.keys(recurrence).filter((day) => recurrence[day]);
-        if (!timeBlock || !start || !end ) {
-            showError("Please fill in all required fields.");
-            return;
+      
+        if (!timeBlock || !start || !end) {
+          showError("Please fill in all required fields.");
+          return;
         }
-        else if (parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)) <= parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0))) {
-            showError("End time should be greater than start time.");
-            return;
+      
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+      
+        if (endDate <= startDate) {
+          showError("End time should be greater than start time.");
+          return;
         }
-        else{
-            const habitData = {
-                ...habit,
-                timeBlock,
-                minTime: parseInt((new Date(start).getTime() / 1000 / 60).toFixed(0)),
-                maxTime: parseInt((new Date(end).getTime() / 1000 / 60).toFixed(0)),
-                start: new Date(start).toISOString(),
-                end: new Date(end).toISOString(),
-                recurrence: selectedDays, // pass array for new recurrence structure
-            };
-            onSubmit(habitData);
-        }
-    };
+      
+        const habitData = {
+          ...habit,
+          timeBlock,
+          minTime: Math.floor(startDate.getTime() / 1000 / 60),
+          maxTime: Math.floor(endDate.getTime() / 1000 / 60),
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+          recurrence: selectedDays,
+        };
+      
+        onSubmit(habitData);
+      };
+
 
     return (
         <div className="modal show d-block" tabIndex="-1">
@@ -69,16 +76,22 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
 
                         <div className="mb-3">
                             <label className="form-label">Start Time</label>
-                            <input type="datetime-local" className="form-control" 
-                                   value={new Date(start).toISOString().slice(0, 16)} 
-                                   onChange={(e) => setStart(new Date(e.target.value))} />
+                            <input
+                                type="datetime-local"
+                                className="form-control"
+                                value={start}
+                                onChange={(e) => setStart(e.target.value)}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">End Time</label>
-                            <input type="datetime-local" className="form-control" 
-                                   value={new Date(end).toISOString().slice(0, 16)} 
-                                   onChange={(e) => setEnd(new Date(e.target.value))} />
+                            <input
+                                type="datetime-local"
+                                className="form-control"
+                                value={end}
+                                onChange={(e) => setEnd(e.target.value)}
+                            />
                         </div>
 
                         <div className="mb-3">
@@ -104,10 +117,10 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
                 </div>
             </div>
             {showPopup && (
-                <Popup 
-                    isVisible={showPopup} 
-                    message={popupMessage} 
-                    onClose={() => setShowPopup(false)} 
+                <Popup
+                    isVisible={showPopup}
+                    message={popupMessage}
+                    onClose={() => setShowPopup(false)}
                 />
             )}
         </div>
