@@ -38,6 +38,11 @@ export const deleteHabit = async (habitId) => {
     return response.data;
   };
 
+export const updateHabit = async (habitId, updatedHabit) => {
+  const response = await api.patch(`/habits/${habitId}/updateHabit`, updatedHabit);
+  return response.data;
+};
+  
 export const getUserHabits = async (userId) => {
     const response = await api.get(`/habits?userId=${userId}`);
     return response.data;

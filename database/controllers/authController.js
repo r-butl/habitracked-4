@@ -183,6 +183,10 @@ const getCuratedHabits = async (req, res) => {
 const updateHabit = async (req, res) => {
   try {
     const { habitId } = req.params;
+    console.log("PATCH /habits/:habitId/updateHabit");
+    console.log("Received habitId:", habitId);
+    console.log("Request body:", req.body);
+
     // Only allow these fields to be updated
     const allowedFields = [
       "name", "icon", "description", "minTime", "maxTime",
@@ -195,12 +199,22 @@ const updateHabit = async (req, res) => {
       }
     }
 
-    // Check that the habit belongs to the user
-    const habit = await HabitModel.findById(habitId);
-    if (!habit || habit.userId.toString() !== req.user.id) {
-      return res.status(403).json({ error: "Not authorized" });
+    // Convert visibility string to number
+    if (updateData.visibility === "public") {
+      updateData.visibility = 1;
+    } else if (updateData.visibility === "private") {
+      updateData.visibility = 0;
     }
 
+    console.log("Filtered updateData:", updateData);
+
+    // Find habit
+    const habit = await HabitModel.findById(habitId);
+    if (!habit) {
+      return res.status(404).json({ error: "Habit not found" });
+    }
+
+    // Update habit
     const updatedHabit = await HabitModel.findByIdAndUpdate(
       habitId,
       updateData,
@@ -208,13 +222,14 @@ const updateHabit = async (req, res) => {
     );
 
     if (!updatedHabit) {
-      return res.status(404).json({ error: 'Habit not found' });
+      return res.status(404).json({ error: "Habit not found after update" });
     }
 
+    console.log("Habit updated successfully:", updatedHabit);
     return res.json(updatedHabit);
   } catch (error) {
-    console.error('Error updating habit:', error);
-    return res.status(500).json({ error: 'Server error while updating habit' });
+    console.error("Error updating habit:", error);
+    return res.status(500).json({ error: "Server error while updating habit" });
   }
 };
 

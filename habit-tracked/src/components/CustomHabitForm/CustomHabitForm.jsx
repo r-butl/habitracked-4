@@ -2,26 +2,26 @@ import { useState } from "react";
 import './CustomHabitForm.css'; // Import the CSS file
 import { Popup } from "../Popup/Popup";
 
-export const CustomHabitForm = ({ onSubmit }) => {
+export const CustomHabitForm = ({ onSubmit, initialHabit = null }) => {
   // State for form fields
-  const [name, setName] = useState("");
-  const [icon, setIcon] = useState(null); // Will store the icon file
-  const [description, setDescription] = useState("");
-  const [minTime, setMinTime] = useState("");
-  const [maxTime, setMaxTime] = useState("");
-  const [timeBlock, setTimeBlock] = useState("morning");
-  const [visibility, setVisibility] = useState("private"); // "public" or "private"
-  const [recurrence, setRecurrence] = useState({
-    monday: false,
-    tuesday: false,
-    wednesday: false,
-    thursday: false,
-    friday: false,
-    saturday: false,
-    sunday: false,
+  const [name, setName] = useState(initialHabit?.name || "");
+  const [icon, setIcon] = useState(initialHabit?.icon || null);
+  const [description, setDescription] = useState(initialHabit?.description || "");
+  const [minTime, setMinTime] = useState(initialHabit?.minTime?.toString() || "");
+  const [maxTime, setMaxTime] = useState(initialHabit?.maxTime?.toString() || "");
+  const [timeBlock, setTimeBlock] = useState(initialHabit?.timeBlock || "morning");
+  const [visibility, setVisibility] = useState(initialHabit?.visibility || "private");
+  const [recurrence, setRecurrence] = useState(() => {
+    const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    const selected = initialHabit?.recurrence || [];
+    return days.reduce((acc, day) => {
+      acc[day] = selected.includes(day);
+      return acc;
+    }, {});
   });
-  const [start, setStart] = useState(new Date());
-  const [end, setEnd] = useState(new Date());
+  const [start, setStart] = useState(initialHabit?.start ? new Date(initialHabit.start) : new Date());
+  const [end, setEnd] = useState(initialHabit?.end ? new Date(initialHabit.end) : new Date());
+
   const [showPopup, setShowPopup] = useState(false); // State to control the popup visibility
   const [popupMessage, setPopupMessage] = useState(""); // Message for the popup
 
@@ -66,6 +66,7 @@ export const CustomHabitForm = ({ onSubmit }) => {
     } 
     else {
       const newHabit = {
+        ...(initialHabit?.id || initialHabit?._id ? { id: initialHabit.id || initialHabit._id } : {}), // preserve habit_id if it exists
         name,
         icon,
         description,
