@@ -7,6 +7,11 @@ import { getUserHabits } from '../utils/api';
 export default function Dashboard() {
   const { user } = useContext(UserContext);
   const [habits, setHabits] = useState([]);
+  const [refreshSignal, setRefreshSignal] = useState(0);
+
+  const triggerRefresh = () => {
+    setRefreshSignal(prev => prev + 1);
+  };
 
   const fetchHabits = async () => {
     if (!user || !user.id) return;
@@ -24,7 +29,7 @@ export default function Dashboard() {
 
   return (
     <div className="container min-vh-100">
-      <div className="card shadow-lg p-4 text-center mb-4 mx-auto" style={{ maxWidth: "600px", marginTop: "40px" }}>
+      <div className="card shadow-lg p-4 text-center mb-4 mx-auto" style={{ maxWidth: "600px", width: "100%", height: "150px", marginTop: "40px" }}>
         <h1 className="text-primary mb-3">Dashboard</h1>
         {!!user && (
           <h2 className="text-secondary fs-4">Hi, {user.name}! 👋</h2>
@@ -33,16 +38,17 @@ export default function Dashboard() {
 
       <div className="row">
         <div className="col-md-8 mb-4">
-          <LogHistoryGraph />
+          <LogHistoryGraph refreshSignal={refreshSignal} />
         </div>
 
         <div className="col-md-4">
           <div className="card p-3 shadow-sm" style={{ height: "100%" }}>
-            <h5 className="text-primary mb-3">All Habits</h5>
+            <h5 className="text-primary mb-3">Log Habit Progress for Today</h5>
+            <p>Today, I did...</p>
             <div style={{ overflowY: "auto", maxHeight: "400px" }}>
               {habits.length > 0 ? (
                 habits.map(habit => (
-                  <HabitLog key={habit.id} habit={habit} />
+                  <HabitLog key={habit.id} habit={habit} onLogCreated={triggerRefresh} />
                 ))
               ) : (
                 <p className="text-muted">No habits found.</p>

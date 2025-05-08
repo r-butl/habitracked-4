@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createLog } from '../../utils/api';
 import { Popup } from '../Popup/Popup';
 
-export default function HabitCard({ habit }) {
+export default function HabitCard({ habit, onLogCreated }) {
   const [minutes, setMinutes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -20,6 +20,7 @@ export default function HabitCard({ habit }) {
         setPopupMessage(`Logged ${res.log.duration} minutes for "${habit.name}"`);
         setShowPopup(true);
         setMinutes('');
+        if (onLogCreated) onLogCreated();
     } 
     catch (err) {
         setPopupMessage("Failed to log.");

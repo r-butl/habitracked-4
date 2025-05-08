@@ -9,10 +9,9 @@ import {
     VictoryAxis,
     VictoryTooltip,
     VictoryVoronoiContainer,
-    VictoryLegend
   } from "victory";
 
-export const LogHistoryGraph = () => {
+export const LogHistoryGraph = ({ refreshSignal}) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("week");
   const [data, setData] = useState({});
   const [xlabel, setXLabel] = useState("Week");
@@ -35,19 +34,36 @@ export const LogHistoryGraph = () => {
     const results = {};
 
     habits.forEach(habit => {
-        const dataPoints = habit.logs
-            .map(log => ({ ...log, date: new Date(log.date) }))
-            .filter(log => log.date >= startDate && log.date <= endDate)
-            .map(log => {
-                return {
-                    x: log.date,
-                    y: log.duration || 1,
-                }
-            });
+        if (!habit.logs || habit.logs.length === 0) return;
+
+        const allDates = [];
+        let cursor = new Date(startDate);
+        while (cursor <= endDate) {
+          allDates.push(new Date(cursor));
+          cursor.setDate(cursor.getDate() + 1);
+        }
+
+        const dateMap = {};
+        habit.logs
+          .map(log => ({ ...log, date: new Date(log.date) }))
+          .filter(log => log.date >= startDate && log.date <= endDate)
+          .forEach(log => {
+            const dateStr = format(log.date, 'yyyy-MM-dd');
+            dateMap[dateStr] = (dateMap[dateStr] || 0) + (log.duration || 1);
+          });
+
+        const dataPoints = allDates.map(date => {
+          const dateStr = format(date, 'yyyy-MM-dd');
+          return {
+            x: new Date(date),
+            y: dateMap[dateStr] || 0,
+          };
+        });
 
         results[habit.id] = dataPoints;
     }); 
 
+    console.log(results);
     return results
   };
 
@@ -74,28 +90,9 @@ export const LogHistoryGraph = () => {
 
       try {
         const data = await getUserHabits(user.id);
-        //setHabits(data);
-        const testHabit = {
-          id: "test-habit-1",
-          name: "Reading",
-          logs: [
-            { date: subMonths(new Date(), 2), duration: 2 },
-            { date: subMonths(new Date(), 1), duration: 3 },
-            { date: subWeeks(new Date(), 2), duration: 1 },
-            { date: subWeeks(new Date(), 1), duration: 2 },
-            { date: subDays(new Date(), 5), duration: 1.5 },
-            { date: subDays(new Date(), 4), duration: 0.5 },
-            { date: subDays(new Date(), 3), duration: 1 },
-            { date: subDays(new Date(), 2), duration: 1.5 },
-            { date: subDays(new Date(), 1), duration: 0.5 },
-            { date: new Date(), duration: 1 },
-          ]
-        };
-        testHabit.logs.sort((a, b) => new Date (a.date) - new Date(b.date));
 
-        console.log(testHabit.logs)
-
-        setHabits([...data, testHabit]);
+        setHabits([...data]);
+        console.log(data);
       } catch (err) {
         console.error("Error fetching habits: ", err);
       }
@@ -111,7 +108,7 @@ export const LogHistoryGraph = () => {
       setData(result);
     };
     loadData();
-  }, [habits, selectedTimeframe]);
+  }, [habits, selectedTimeframe, refreshSignal]);
 
   const handleSelectChange = (e) => {
     setSelectedTimeframe(e.target.value);
