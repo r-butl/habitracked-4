@@ -11,12 +11,38 @@ import {
     VictoryVoronoiContainer,
   } from "victory";
 
+  // Define habitColors and getColorByIndex at the top of the component
+const habitColors = [
+  "#4f81bd", "#c0504d", "#9bbb59", "#8064a2", "#4bacc6",
+  "#f79646", "#7f7f7f", "#fabf8f", "#92d050", "#ff5050"
+];
+const getColorByIndex = (index) => habitColors[index % habitColors.length];
+
 export const LogHistoryGraph = ({ refreshSignal}) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("week");
   const [data, setData] = useState({});
   const [xlabel, setXLabel] = useState("Week");
   const { user } = useContext(UserContext);
   const [habits, setHabits] = useState([]);
+
+  // Habit loading
+  useEffect(() => {
+
+    const fetchHabits = async () => {
+      if (!user || !user.id) return;
+
+      try {
+        const data = await getUserHabits(user.id);
+
+        setHabits([...data]);
+        console.log(data);
+      } catch (err) {
+        console.error("Error fetching habits: ", err);
+      }
+    };
+
+    fetchHabits();
+    }, [user]);
 
   // Generate data for the last 7 days
   const getFilteredLogData = async (mode) => {
@@ -34,6 +60,7 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
     const results = {};
 
     habits.forEach(habit => {
+        console.log(habit.id);
         if (!habit.logs || habit.logs.length === 0) return;
 
         const allDates = [];
@@ -82,25 +109,9 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
     },
   };
 
-  // Habit loading
-  useEffect(() => {
 
-    const fetchHabits = async () => {
-      if (!user || !user.id) return;
 
-      try {
-        const data = await getUserHabits(user.id);
-
-        setHabits([...data]);
-        console.log(data);
-      } catch (err) {
-        console.error("Error fetching habits: ", err);
-      }
-    };
-
-    fetchHabits();
-    }, [user]);
-
+    // Graph time update
   useEffect(() => {
     if (habits.length === 0) return;
     const loadData = async () => {
@@ -157,13 +168,16 @@ export const LogHistoryGraph = ({ refreshSignal}) => {
                 axisLabel: axisLabelStyle
             }}/>
 
-            {Object.entries(data).map(([habitId, habitData]) =>(
+            {Object.entries(data).map(([habitId, habitData], index) =>(
                 <VictoryBar 
                 key={habitId}
                 data={habitData}
                 labels={({ datum }) => `${datum.y}`}
                 labelComponent={<VictoryTooltip />}
                 barRatio={0.8}
+                style={{
+                  data: { fill: getColorByIndex(index), fillOpacity: 0.6 }
+                }}
                 />
             ))}
 
