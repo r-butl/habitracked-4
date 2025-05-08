@@ -94,7 +94,7 @@ const getHabits = async (req, res) => {
     }
 
     const habits = await HabitModel.find({ userId });
-    return res.json(habits);
+    return res.status(200).json(habits);
   } catch (error) {
     console.error('Error fetching habits:', error);
     return res.status(500).json({ error: 'Error fetching habits' });
@@ -214,6 +214,11 @@ const updateHabit = async (req, res) => {
       return res.status(404).json({ error: "Habit not found" });
     }
 
+    // Check user ownership
+    if (habit.userId.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
     // Update habit
     const updatedHabit = await HabitModel.findByIdAndUpdate(
       habitId,
@@ -222,7 +227,7 @@ const updateHabit = async (req, res) => {
     );
 
     if (!updatedHabit) {
-      return res.status(404).json({ error: "Habit not found after update" });
+      return res.status(404).json({ error: "Habit not found" });
     }
 
     console.log("Habit updated successfully:", updatedHabit);
