@@ -3,17 +3,17 @@ import { Popup } from '../components/Popup/Popup';
 
 export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
     const [timeBlock, setTimeBlock] = useState(habit.timeBlock || "morning");
-    const [start, setStart] = useState(() => new Date().toISOString().slice(0, 16));
-    const [end, setEnd] = useState(() => new Date().toISOString().slice(0, 16));
-    const [recurrence, setRecurrence] = useState({
-        monday: false,
-        tuesday: false,
-        wednesday: false,
-        thursday: false,
-        friday: false,
-        saturday: false,
-        sunday: false,
-    });
+    const [start, setStart] = useState(habit.start ? new Date(habit.start) : new Date());
+    const [end, setEnd] = useState(habit.end ? new Date(habit.end) : new Date(Date.now() + 3600000));
+    const [recurrence, setRecurrence] = useState(() => {
+        const defaultDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+        const selected = habit.recurrence || [];
+        return defaultDays.reduce((acc, day) => {
+          acc[day] = selected.includes(day);
+          return acc;
+        }, {});
+      });
+      
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState("");
 
@@ -41,20 +41,20 @@ export function ConfigureHabitDialog({ habit, onClose, onSubmit }) {
           showError("End time should be greater than start time.");
           return;
         }
-      
-        const habitData = {
-          ...habit,
-          timeBlock,
-          minTime: Math.floor(startDate.getTime() / 1000 / 60),
-          maxTime: Math.floor(endDate.getTime() / 1000 / 60),
-          start: startDate.toISOString(),
-          end: endDate.toISOString(),
-          recurrence: selectedDays,
-        };
-      
-        onSubmit(habitData);
-      };
-
+        else{
+            const durationMinutes = Math.round((new Date(end) - new Date(start)) / 60000);
+            const habitData = {
+                ...habit,
+                timeBlock,
+                minTime: durationMinutes,
+                maxTime: durationMinutes,
+                start: new Date(start).toISOString(),
+                end: new Date(end).toISOString(),
+                recurrence: selectedDays, // pass array for new recurrence structure
+            };
+            onSubmit(habitData);
+        }
+    };
 
     return (
         <div className="modal show d-block" tabIndex="-1">

@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { getUserHabits, deleteHabit } from '../utils/api';
-import { ConfigureHabitDialog } from './ConfigureHabitDialog';
+import { getUserHabits, deleteHabit, updateHabit } from '../utils/api';
 import { UserContext } from '../context/userContext';
 import { Popup } from '../components/Popup/Popup';
+import { CustomHabitForm } from '../components/CustomHabitForm/CustomHabitForm';
 
-export function UserHabitsDialog({ show, onClose, onSelect }) {
+export function UserHabitsDialog({ show, onClose }) {
   const { user } = useContext(UserContext);
   const [userHabits, setUserHabits] = useState([]);
+  const [habitToEdit, setHabitToEdit] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedHabit, setSelectedHabit] = useState(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
 
@@ -34,10 +34,9 @@ export function UserHabitsDialog({ show, onClose, onSelect }) {
   // Handle deleting habit
   const handleDeleteHabit = async (habitToDelete) => {
     try {
-      await deleteHabit(habitToDelete._id); // Delete from backend
-      // Refetch the habits to ensure the latest data from the server
+      await deleteHabit(habitToDelete._id);
       const data = await getUserHabits(user.id);
-      setUserHabits(data); // Update the local state with the latest habits
+      setUserHabits(data);
       setPopupMessage("Habit deleted successfully! Please refresh the page.");
       setIsPopupVisible(true);
     } catch (err) {
@@ -86,7 +85,7 @@ export function UserHabitsDialog({ show, onClose, onSelect }) {
                       <div className="d-flex gap-2">
                         <button
                           className="btn btn-sm btn-primary"
-                          onClick={() => setSelectedHabit(habit)}
+                          onClick={() => setHabitToEdit(habit)}
                         >
                           Edit
                         </button>
@@ -115,15 +114,25 @@ export function UserHabitsDialog({ show, onClose, onSelect }) {
         />
       )}
 
-      {/* Configurator Modal */}
-      {selectedHabit && (
-        <ConfigureHabitDialog
-          habit={selectedHabit}
-          onClose={() => setSelectedHabit(null)}
-          onSubmit={(finalHabit) => {
-            onSelect(finalHabit); // Pass the configured habit back to the parent
-            setSelectedHabit(null);
+      {/* Edit Habit Modal */}
+      {habitToEdit && (
+        <CustomHabitForm
+          initialHabit={habitToEdit}
+          onSubmit={async (updatedHabit) => {
+            try {
+              await updateHabit(habitToEdit._id, updatedHabit); // call api
+              const data = await getUserHabits(user.id);
+              setUserHabits(data);
+              setPopupMessage("Habit updated successfully!");
+              setIsPopupVisible(true);
+              setHabitToEdit(null);
+            } catch (err) {
+              console.error("Update failed", err);
+              setPopupMessage("Failed to update habit.");
+              setIsPopupVisible(true);
+            }
           }}
+          onHide={() => setHabitToEdit(null)}
         />
       )}
     </>
