@@ -1,16 +1,33 @@
 import React, { useState } from 'react';
+import { createLog } from '../../utils/api';
+import { Popup } from '../Popup/Popup';
 
 export default function HabitCard({ habit }) {
   const [minutes, setMinutes] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
 
-  const handleLog = () => {
+  const handleLog = async () => {
     if (!minutes || isNaN(minutes)) {
-      alert("Please enter a valid number of minutes.");
-      return;
+        setPopupMessage("Please enter a valid number of minutes.");
+        setShowPopup(true);
+        return;
     }
-    console.log(`Habit: ${habit.name}, Logged: ${minutes} minutes`);
-    alert(`Logged ${minutes} minutes for "${habit.name}"!`);
-    setMinutes('');
+    setIsLoading(true);
+    try {
+        const res = await createLog(habit._id, minutes);
+        setPopupMessage(`Logged ${res.log.duration} minutes for "${habit.name}"`);
+        setShowPopup(true);
+        setMinutes('');
+    } 
+    catch (err) {
+        setPopupMessage("Failed to log.");
+        setShowPopup(true);
+    } 
+    finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -25,10 +42,17 @@ export default function HabitCard({ habit }) {
           placeholder="Minutes"
           className="form-control form-control-sm"
         />
-        <button onClick={handleLog} className="btn btn-sm btn-primary">
-          Log
+        <button onClick={handleLog} disabled={isLoading} className="btn btn-sm btn-primary">
+            {isLoading ? "Logging..." : "Log"}
         </button>
       </div>
+      {showPopup && (
+        <Popup 
+          isVisible={showPopup} 
+          message={popupMessage} 
+          onClose={() => setShowPopup(false)} 
+        />
+      )}
     </div>
   );
 }
