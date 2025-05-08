@@ -60,7 +60,7 @@ export const CustomHabitForm = ({ onSubmit }) => {
       showError("Max Time should be greater than or equal to Min Time.");
       return;
     }
-    else if (new Date(start) >= new Date(end)){
+    else if (new Date(start) >= new Date(`end`)){
       showError("Start date should be before end date.");
       return;
     } 
