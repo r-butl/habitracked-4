@@ -1,8 +1,7 @@
 import { useState } from "react";
-import './CustomHabitForm.css';
 import { Popup } from "../Popup/Popup";
 
-export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide }) => {
+export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide, show }) => {
   const [name, setName] = useState(initialHabit?.name || "");
   const [icon, setIcon] = useState(initialHabit?.icon || null);
   const [description, setDescription] = useState(initialHabit?.description || "");
@@ -18,9 +17,12 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide }) => {
       return acc;
     }, {});
   });
-  const [start, setStart] = useState(initialHabit?.start ? new Date(initialHabit.start) : new Date());
-  const [end, setEnd] = useState(initialHabit?.end ? new Date(initialHabit.end) : new Date());
-
+  const [start, setStart] = useState(
+    initialHabit?.start ? new Date(initialHabit.start).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
+  );
+  const [end, setEnd] = useState(
+    initialHabit?.end ? new Date(initialHabit.end).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
+  );
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
 
@@ -45,7 +47,7 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide }) => {
 
   const handleSubmit = (e) => {
     e?.preventDefault();
-    const selectedDays = Object.keys(recurrence).filter(day => recurrence[day]);
+    const selectedDays = Object.keys(recurrence).filter((day) => recurrence[day]);
 
     if (!name.trim() || !description.trim() || !minTime || !maxTime) {
       showError("Please fill in all required fields.");
@@ -78,52 +80,36 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide }) => {
     onSubmit(newHabit);
   };
 
-  return (
-    <div className="fullscreen-form">
-      <form onSubmit={handleSubmit}>
-        <h2>{initialHabit ? "Edit Custom Habit" : "Create a Custom Habit"}</h2>
+  return !show ? null : (
+    <>
+      <div className="modal show d-block" tabIndex="-1">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">{initialHabit ? "Edit Custom Habit" : "Create a Custom Habit"}</h5>
+              <button type="button" className="btn-close" onClick={onHide}></button>
+            </div>
+            <div className="modal-body">
+              <form>
+                <div className="mb-3">
+                  <label className="form-label">Habit Name*</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
 
-        <input
-          type="text"
-          placeholder="Habit name*"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <input
-          type="text"
-          placeholder="Description*"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <input
-          type="number"
-          placeholder="Min Time (min)*"
-          value={minTime}
-          onChange={(e) => setMinTime(e.target.value)}
-        />
-
-        <input
-          type="number"
-          placeholder="Max Time (min)*"
-          value={maxTime}
-          onChange={(e) => setMaxTime(e.target.value)}
-        />
-
-        <select value={timeBlock} onChange={(e) => setTimeBlock(e.target.value)}>
-          <option value="morning">Morning</option>
-          <option value="afternoon">Afternoon</option>
-          <option value="evening">Evening</option>
-        </select>
-
-        <select
-          value={visibility}
-          onChange={(e) => setVisibility(e.target.value)}
-        >
-          <option value="public">Public</option>
-          <option value="private">Private</option>
-        </select>
+                <div className="mb-3">
+                  <label className="form-label">Description*</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
 
                 <div className="row mb-3">
                   <div className="col">
@@ -146,45 +132,108 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide }) => {
                   </div>
                 </div>
 
-        <label>Start:</label>
-        <input
-          type="datetime-local"
-          value={start.toISOString().slice(0, 16)}
-          onChange={(e) => setStart(new Date(e.target.value))}
-        />
+                <div className="row mb-3">
+                  <div className="col">
+                    <label className="form-label">Time Block</label>
+                    <select
+                      className="form-select"
+                      value={timeBlock}
+                      onChange={(e) => setTimeBlock(e.target.value)}
+                    >
+                      <option value="morning">Morning</option>
+                      <option value="afternoon">Afternoon</option>
+                      <option value="evening">Evening</option>
+                    </select>
+                  </div>
+                  <div className="col">
+                    <label className="form-label">Visibility</label>
+                    <select
+                      className="form-select"
+                      value={visibility}
+                      onChange={(e) => setVisibility(e.target.value)}
+                    >
+                      <option value="public">Public</option>
+                      <option value="private">Private</option>
+                    </select>
+                  </div>
+                </div>
 
-        <label>End:</label>
-        <input
-          type="datetime-local"
-          value={end.toISOString().slice(0, 16)}
-          onChange={(e) => setEnd(new Date(e.target.value))}
-        />
+                <div className="mb-3">
+                  <label className="form-label">Recurrence</label>
+                  <div className="d-flex flex-wrap gap-2">
+                    {Object.keys(recurrence).map((day) => (
+                      <div key={day} className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`day-${day}`}
+                          name={day}
+                          checked={recurrence[day]}
+                          onChange={handleRecurrenceChange}
+                        />
+                        <label className="form-check-label" htmlFor={`day-${day}`}>
+                          {day.charAt(0).toUpperCase() + day.slice(1)}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-        <label>Upload Icon (PNG only):</label>
-        <input
-          type="file"
-          accept="image/png"
-          onChange={handleFileChange}
-        />
+                <div className="row mb-3">
+                  <div className="col">
+                    <label className="form-label">Start Time</label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      value={start}
+                      onChange={(e) => setStart(e.target.value)}
+                    />
+                  </div>
+                  <div className="col">
+                    <label className="form-label">End Time</label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      value={end}
+                      onChange={(e) => setEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-        {icon && (
-          <div>
-            <h4>Selected Icon:</h4>
-            <img src={icon} alt="Selected icon" style={{ maxWidth: '100px', maxHeight: '100px' }} />
+                <div className="mb-3">
+                  <label className="form-label">Upload Icon (PNG only)</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept="image/png"
+                    onChange={handleFileChange}
+                  />
+                </div>
+
+                {icon && (
+                  <div className="mb-3">
+                    <label className="form-label">Selected Icon:</label>
+                    <div>
+                      <img
+                        src={icon}
+                        alt="Selected icon"
+                        style={{ maxWidth: "100px", maxHeight: "100px" }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={onHide}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSubmit}>
+                {initialHabit ? "Update Habit" : "Save Habit"}
+              </button>
+            </div>
           </div>
-        )}
-
-        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-          <button type="submit">
-            {initialHabit ? "Update Habit" : "Save Habit"}
-          </button>
-          {initialHabit && onHide && (
-            <button type="button" onClick={onHide}>
-              Cancel
-            </button>
-          )}
         </div>
-      </form>
+      </div>
 
       {showPopup && (
         <Popup
@@ -193,6 +242,6 @@ export const CustomHabitForm = ({ onSubmit, initialHabit = null, onHide }) => {
           onClose={() => setShowPopup(false)}
         />
       )}
-    </div>
+    </>
   );
 };
