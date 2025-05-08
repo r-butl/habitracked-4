@@ -53,3 +53,16 @@ export const getLogs = async (habitId, startDate, endDate) => {
     const response = await api.get(`/habits/${habitId}/getLogs`, { startDate, endDate });
     return response.data;
 };
+
+export const createLog = async (habitId, duration) => {
+    try{ 
+        const response = await api.post(`habits/${habitId}/createLog`,{
+            duration: parseInt(duration)
+        });
+        return response.data;
+    }
+    catch (error) {
+        console.error("Error creating log:", error);
+        throw error;
+    }   
+}
