@@ -259,6 +259,47 @@ describe("Backend Tests", () => {
     });
   });
 
+  describe('Get Habits', () => {
+    let req, res;
+  
+    beforeEach(() => {
+      req = { query: { userId: 'u1' } };
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      jest.clearAllMocks();
+    });
+  
+    it('should return habits for a given userId', async () => {
+      const mockHabits = [{ name: 'Test Habit', userId: 'u1' }];
+      HabitModel.find = jest.fn().mockResolvedValue(mockHabits);
+  
+      await getHabits(req, res);
+  
+      expect(HabitModel.find).toHaveBeenCalledWith({ userId: 'u1' });
+      expect(res.json).toHaveBeenCalledWith(mockHabits);
+    });
+  
+    it('should return 400 if userId is missing', async () => {
+      req.query = {}; // userId missing
+  
+      await getHabits(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'User ID is required' });
+    });
+  
+    it('should return 500 on server error', async () => {
+      HabitModel.find = jest.fn().mockRejectedValue(new Error('DB error'));
+  
+      await getHabits(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Error fetching habits' });
+    });
+  });
+
   describe('updateHabit', () => {
     let req, res;
   
@@ -530,7 +571,5 @@ describe("Backend Tests", () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Error getting logs.' });
     });
   });
-
-  
 
 });

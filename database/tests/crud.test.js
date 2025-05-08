@@ -39,7 +39,7 @@ describe("MongoDB CRUD Operations", () => {
   test("Update the users name", async () => {
     const result = await usersCollection.updateOne(
       { email: "johndoe@example.com" },
-      { $set: { name: "Johnathan Doe" } }
+      { $set: { name: "Johnny Doe" } }
     );
 
     expect(result.matchedCount).toBe(1);
